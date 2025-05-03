@@ -1,9 +1,33 @@
-# frontファイル
-/front/node_modules
-/front/npm-debug.log
-/front/dist
-
-# 環境ファイル
+# ++++++++++++++++++++++++++++++++++++++
+# frontend
+# ++++++++++++++++++++++++++++++++++++++
+/frontend/node_modules
+/frontend/npm-debug.log
+/frontend/dist
+/frontend/.next
+# ++++++++++++++++++++++++++++++++++++++
+# backend
+# ++++++++++++++++++++++++++++++++++++++
+/backend/public/storage
+/backend/storage/app/*
+/backend/storage/framework/cache/data/*
+/backend/storage/framework/sessions/*
+/backend/storage/framework/testing
+/backend/storage/framework/views/*
+/backend/storage/logs/*
+/backend/storage/*.key
+/backend/vendor
+/backend/.styleci.yml
+/backend/.phpunit.result.cache
+/backend/.php-cs-fixer.cache
+/backend/phpunit.xml
+/backend/README.md
+/backend/_ide_helper_models.php
+/backend/_ide_helper.php
+/backend/tests
+# ++++++++++++++++++++++++++++++++++++++
+# enviroment
+# ++++++++++++++++++++++++++++++++++++++
 /.github
 /.git
 /.idea

@@ -30,20 +30,13 @@ RUN apk add --no-cache \
     oniguruma-dev \
     libxml2-dev \
     libzip-dev \
-    libpng-dev \
-    freetype-dev \
-    libjpeg-turbo-dev \
     git \
     vim
 
-RUN docker-php-ext-configure gd \
-        --with-freetype=/usr/include/ \
-        --with-jpeg=/usr/include/ && \
-    docker-php-ext-install \
+RUN docker-php-ext-install \
     pdo_mysql \
     zip \
-    bcmath \
-    gd
+    bcmath
 
 COPY ./infra/docker/backend/php.local.ini /usr/local/etc/php/php.ini
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer

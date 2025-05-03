@@ -1,4 +1,4 @@
-FROM node:lts-bookworm AS node
+FROM node:lts-alpine AS node
 
 WORKDIR /frontend
 
