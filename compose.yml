@@ -1,0 +1,62 @@
+volumes:
+  db-store:
+  node_modules:
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/docker/frontend/Dockerfile
+    container_name: ${APP_NAME}-frontend-${ENV}
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    volumes:
+      - ./frontend:/frontend
+      - node_modules:/frontend/node_modules
+
+  backend:
+    container_name: ${APP_NAME}-backend-${ENV}
+    build:
+      context: .
+      dockerfile: ./infra/docker/backend/Dockerfile
+      args:
+        - UID=${UID}
+        - GID=${GID}
+        - USER_NAME=${USER_NAME}
+      target: ${ENV}
+    volumes:
+      - ./backend:/var/www/backend
+    depends_on:
+      - db
+
+  web:
+    container_name: ${APP_NAME}-web-${ENV}
+    build:
+      context: .
+      dockerfile: ./infra/docker/nginx/Dockerfile
+      args:
+        - UID=${UID}
+        - GID=${GID}
+      target: ${ENV}
+    ports:
+      - ${WEB_PORT}:80
+    volumes:
+      - ./backend:/var/www/backend
+    depends_on:
+      - frontend
+      - backend
+
+  db:
+    container_name: ${APP_NAME}-db-${ENV}
+    build:
+      context: .
+      dockerfile: ./infra/docker/mysql/Dockerfile
+    ports:
+      - ${DB_PORT}:3306
+    volumes:
+      - db-store:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
+      - MYSQL_ROOT_PASSWORD=${DB_PASS}

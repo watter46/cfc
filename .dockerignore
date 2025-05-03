@@ -1,0 +1,16 @@
+# frontファイル
+/front/node_modules
+/front/npm-debug.log
+/front/dist
+
+# 環境ファイル
+/.github
+/.git
+/.idea
+/.vscode
+**.env*
+**.editorconfig
+**.gitattributes
+**.gitignore
+**.md
+/.devcontainer
