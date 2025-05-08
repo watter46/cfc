@@ -1,60 +1,13 @@
-# +++++++++++++++++++++++++++++++++++++++
-# frontend
-# +++++++++++++++++++++++++++++++++++++++
-# dependencies
-/frontend/node_modules
-/frontend/.pnp
-/front.pnp.*
-
-# testing
-/frontend/coverage
-
-# next.js
-/frontend/.next/
-/frontend/out/
-
-# production
-/frontend/build
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# typescript
-/front*.tsbuildinfo
-/frontnext-env.d.ts
-
-# +++++++++++++++++++++++++++++++++++++++
-# backend
-# +++++++++++++++++++++++++++++++++++++++
-
-# Laravel のログ・キャッシュ
-backend/storage/
-
-# Composer 依存ファイル
-backend/vendor/
-
-# キャッシュ・ビルドファイル
-backend/bootstrap/cache/*
-backend/public
-
-# 環境ファイル
+# env
 .env
 .env.*
 **/.env
 **/.env.*
 
-# テスト
-backend/.phpunit.xml
-backend/.phpunit.result.cache
-backend/tests/
-bin/
-
 # IDE・エディタ関連
 Memo/
 .vscode/
 doc
-backend/_ide_helper_models.php
-backend/_ide_helper.php
 
 # Docker関連
 infra/docker/nginx/.htpasswd

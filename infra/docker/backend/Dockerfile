@@ -1,7 +1,7 @@
 # ====================================
 # base
 # ====================================
-FROM php:8.4-fpm-alpine3.21 AS base
+FROM php:8.3-fpm-alpine3.21 AS base
 
 # timezone environment
 ENV TZ=UTC \
