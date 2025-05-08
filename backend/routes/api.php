@@ -1,17 +1,9 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+declare(strict_types=1);
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+use App\Http\Controllers\User\AuthController;
 
-Route::get('games', function () {
-    return response()->json([
-        'games' => [
-            ['id' => 1, 'name' => 'Match 1'],
-            ['id' => 2, 'name' => 'Match 2'],
-        ],
-    ]);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [AuthController::class, 'me']);
 });
