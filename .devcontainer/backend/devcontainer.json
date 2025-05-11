@@ -14,28 +14,19 @@
         "php-cs-fixer.onsave": true,
         "php-cs-fixer.config": "/var/www/backend/.php-cs-fixer.php",
         "php-cs-fixer.allowRisky": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
           "source.organizeImports": "explicit"
-        },
-        "[json]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
         }
       },
       "extensions": [
         "junstyle.php-cs-fixer",
         "esbenp.prettier-vscode",
-        "formulahendry.auto-close-tag",
-        "mikestead.dotenv",
-        "idleberg.icon-fonts",
-        "onecentlin.laravel5-snippets",
-        "PKief.material-icon-theme",
-        "amiralizadeh9480.laravel-extra-intellisense",
         "bmewburn.vscode-intelephense-client",
-        "damianbal.vs-phpclassgen",
-        "marabesi.php-import-checker",
-        "GitHub.copilot"
+        "onecentlin.laravel-extension-pack",
+        "spywhere.guides",
+        "streetsidesoftware.code-spell-checker",
+        "mosapride.zenkaku"
       ]
     }
   },
