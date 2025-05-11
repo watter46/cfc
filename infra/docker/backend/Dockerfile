@@ -1,7 +1,7 @@
 # ====================================
 # base
 # ====================================
-FROM php:8.3-fpm-alpine3.21 AS base
+FROM php:8.3-fpm AS base
 
 # timezone environment
 ENV TZ=UTC \
@@ -14,10 +14,9 @@ ARG USER_NAME ${USER_NAME}
 ARG UID ${UID}
 ARG GID ${GID}
 
-RUN apk add --no-cache bash
-
-RUN addgroup -g $GID $USER_NAME && \
-    adduser -s /bin/bash -D -u $UID -G $USER_NAME $USER_NAME
+# ユーザー作成
+RUN groupadd -g $GID $USER_NAME && \
+    useradd -m -s /bin/bash -u $UID -g $GID $USER_NAME
 
 # ====================================
 # local
@@ -26,14 +25,17 @@ FROM base AS local
 
 WORKDIR /var/www/backend
 
-RUN apk add --no-cache \
-    oniguruma-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libonig-dev \
     libxml2-dev \
     libzip-dev \
     git \
-    vim
-
-RUN docker-php-ext-install \
+    vim \
+    unzip \
+    locales \
+    && locale-gen en_US.UTF-8 \
+    && localedef -f UTF-8 -i en_US en_US.UTF-8 \
+    && docker-php-ext-install \
     pdo_mysql \
     zip \
     bcmath
