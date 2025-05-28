@@ -17,16 +17,16 @@
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
           "source.organizeImports": "explicit"
-        }
+        },
+        "todo-tree.filtering.excludeGlobs": ["**/vendor/**", "vendor/**"]
       },
       "extensions": [
         "junstyle.php-cs-fixer",
-        "esbenp.prettier-vscode",
-        "bmewburn.vscode-intelephense-client",
-        "onecentlin.laravel-extension-pack",
-        "spywhere.guides",
+        // "bmewburn.vscode-intelephense-client",
+        // "onecentlin.laravel-extension-pack",
         "streetsidesoftware.code-spell-checker",
-        "mosapride.zenkaku"
+        "damianbal.vs-phpclassgen",
+        "gruntfuggly.todo-tree"
       ]
     }
   },

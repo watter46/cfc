@@ -62,3 +62,15 @@ services:
       - MYSQL_USER=${DB_USER}
       - MYSQL_PASSWORD=${DB_PASS}
       - MYSQL_ROOT_PASSWORD=${DB_PASS}
+
+  db-testing:
+    container_name: ${APP_NAME}-db-testing-${ENV}
+    build:
+      context: .
+      dockerfile: ./infra/docker/mysql/Dockerfile
+    ports:
+      - 2000:3306
+    environment:
+      - MYSQL_DATABASE=${DB_TEST_NAME}
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_ALLOW_EMPTY_PASSWORD="yes"

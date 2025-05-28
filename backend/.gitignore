@@ -27,3 +27,8 @@ yarn-error.log
 /.vscode
 /.zed
 /src
+/app/Template
+/database/data
+/dev_rule
+/loadmap
+memo

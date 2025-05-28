@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     vim \
     unzip \
     locales \
+    make \
     && locale-gen en_US.UTF-8 \
     && localedef -f UTF-8 -i en_US en_US.UTF-8 \
     && docker-php-ext-install \
