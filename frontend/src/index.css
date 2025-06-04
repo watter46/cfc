@@ -1,0 +1,185 @@
+@import "tailwindcss";
+
+/* Custom colors using CSS custom properties for Tailwind v4 */
+@theme {
+  --color-space-900: #0f172a;
+  --color-space-800: #1e293b;
+  --color-space-700: #334155;
+  --color-space-600: #475569;
+
+  --color-neon-blue: #0ea5e9;
+  --color-neon-purple: #8b5cf6;
+  --color-neon-green: #10b981;
+  --color-neon-red: #ef4444;
+
+  --shadow-neon-blue: 0 0 5px #0ea5e9, 0 0 10px #0ea5e9;
+  --shadow-neon-purple: 0 0 5px #8b5cf6, 0 0 10px #8b5cf6;
+  --shadow-neon-green: 0 0 5px #10b981, 0 0 10px #10b981;
+}
+
+@layer base {
+  html {
+    @apply min-h-screen;
+  }
+
+  body {
+    @apply bg-space-900 text-gray-100 font-sans min-h-screen w-full;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold;
+  }
+
+  h1 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-all duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-neon-blue to-blue-600 text-white hover:from-neon-purple hover:to-purple-600 shadow-lg hover:shadow-neon-blue transform hover:scale-105;
+  }
+
+  .btn-secondary {
+    @apply bg-neon-purple text-white hover:bg-purple-600;
+    box-shadow: var(--shadow-neon-purple);
+  }
+
+  .btn-success {
+    @apply bg-neon-green text-white hover:bg-green-600;
+    box-shadow: var(--shadow-neon-green);
+  }
+
+  .card {
+    @apply bg-space-800 rounded-lg border border-space-700 backdrop-blur-sm;
+  }
+
+  .card-glass {
+    @apply bg-space-800/70 backdrop-blur-sm border border-space-700/50 rounded-lg shadow-lg;
+  }
+
+  .input {
+    @apply bg-space-700 border border-space-600 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-neon-blue text-white;
+  }
+
+  .futuristic-border {
+    @apply relative;
+  }
+
+  .futuristic-border::before {
+    @apply content-[''] absolute inset-0 border border-neon-blue rounded-lg opacity-50;
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+}
+
+/* Custom animation for player rating stars */
+@keyframes star-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(14, 165, 233, 0.7);
+  }
+}
+
+.star-rating .active {
+  animation: star-pulse 1.5s ease-in-out infinite;
+}
+
+/* Field styles */
+.soccer-field {
+  background: linear-gradient(to bottom, #1a4c2f, #1c5c33);
+  position: relative;
+}
+
+.soccer-field::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.soccer-field::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.field-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+}
+
+.goal-area {
+  position: absolute;
+  width: 40%;
+  height: 20%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+.goal-area-top {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom: none;
+  border-top: none;
+}
+
+.goal-area-bottom {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom: none;
+  border-top: none;
+}
+
+/* Player position marker */
+.player-marker {
+  @apply absolute w-12 h-12 rounded-full bg-space-800/90 flex items-center justify-center 
+         transform transition-all duration-300 cursor-pointer border-2 border-neon-blue
+         hover:scale-110 z-10;
+  box-shadow: var(--shadow-neon-blue);
+}
