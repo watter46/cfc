@@ -3,7 +3,6 @@
   "dockerComposeFile": "../../compose.yml",
   "service": "frontend",
   "workspaceFolder": "/frontend",
-  "remoteUser": "root",
   "customizations": {
     "vscode": {
       "settings": {
@@ -11,11 +10,8 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "eslint.useFlatConfig": true
       },
-      "extensions": [
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint",
-        "junstyle.php-cs-fixer"
-      ]
+      "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
     }
-  }
+  },
+  "remoteUser": "root"
 }

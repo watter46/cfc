@@ -11,3 +11,7 @@ doc
 
 # Docker関連
 infra/docker/nginx/.htpasswd
+
+.github/
+
+tree.md
