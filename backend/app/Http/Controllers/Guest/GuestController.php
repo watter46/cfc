@@ -5,18 +5,18 @@ declare(strict_types = 1);
 namespace App\Http\Controllers\Guest;
 
 use App\Http\Controllers\ApiController;
-use App\Http\Resources\Guest\LatestGamesCollection;
+use App\Http\Resources\Guest\LatestFinishedGamesCollection;
 use App\Models\Game;
 use App\Repositories\Json\TenGamesJsonRepository;
 use App\UseCases\Admin\Game\Sync\SyncGameAction;
 use App\UseCases\Admin\Game\Sync\SyncGamesAction;
-use App\UseCases\Guest\FetchLatestGames;
+use App\UseCases\Guest\FetchLatestFinishedGames;
 
 class GuestController extends ApiController
 {
-    public function index(FetchLatestGames $fetchLatestGames)
+    public function index(FetchLatestFinishedGames $fetchLatestFinishedGames)
     {
-        return new LatestGamesCollection($fetchLatestGames());
+        return new LatestFinishedGamesCollection($fetchLatestFinishedGames());
     }
 
     public function dev2(SyncGamesAction $syncGamesAction)

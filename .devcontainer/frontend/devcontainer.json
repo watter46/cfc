@@ -10,7 +10,12 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "eslint.useFlatConfig": true
       },
-      "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ]
     }
   },
   "remoteUser": "root"

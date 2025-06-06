@@ -1,42 +1,57 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import GuestHomePage from "@/pages/guest";
+import { BrowserRouter } from "react-router-dom";
+import GuestHomePage from "@/pages/guest/Home";
+import { AuthProviderWithQuery } from "@/features/auth/contexts/AuthProviderWithQuery";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// Auth contextのモック
-vi.mock("@/features/auth/contexts/AuthContext.tsx", () => ({
-  useAuth: () => ({
-    isAuthenticated: false,
-    user: null,
-    login: vi.fn(),
-    logout: vi.fn(),
-    loading: false,
-  }),
+// Create a wrapper component for tests
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: 0,
+      },
+    },
+  });
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProviderWithQuery>
+        <BrowserRouter>{children}</BrowserRouter>
+      </AuthProviderWithQuery>
+    </QueryClientProvider>
+  );
+};
+
+// API clientのモック
+vi.mock("@/shared/lib/api-client", () => ({
+  api: {
+    auth: {
+      getUser: vi.fn().mockRejectedValue(new Error("Not authenticated")),
+      login: vi.fn(),
+      register: vi.fn(),
+      logout: vi.fn(),
+    },
+  },
 }));
 
-// React Routerのモック
-vi.mock("react-router-dom", () => ({
-  Link: ({
-    children,
-    to,
-    ...props
-  }: {
-    children: React.ReactNode;
-    to: string;
-    [key: string]: unknown;
-  }) => (
-    <a href={to} {...props}>
-      {children}
-    </a>
-  ),
-  useNavigate: () => vi.fn(),
-}));
+// React Routerのナビゲート関数のモック
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+  };
+});
 
 // 実際のデータを使用した統合テスト
 describe("Guest Page Integration Tests", () => {
   describe("Real Data Integration", () => {
     it("renders guest page with real featured matches data", () => {
-      render(<GuestHomePage />);
+      render(<GuestHomePage />, { wrapper: TestWrapper });
 
       // 実際のfeaturedMatchesデータから試合が表示されることを確認
       // PublicMatchCardコンポーネントが実際に呼ばれることを確認
@@ -44,18 +59,18 @@ describe("Guest Page Integration Tests", () => {
     });
 
     it("displays correct number of match cards from backend data", () => {
-      render(<GuestHomePage />);
+      render(<GuestHomePage />, { wrapper: TestWrapper });
 
       // PublicMatchCardコンポーネントが呼ばれる数を確認
       // featuredMatchesは6つの試合を含んでいる
       const matchGrid = document.querySelector(
-        ".grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3",
+        ".grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3"
       );
       expect(matchGrid).toBeInTheDocument();
     });
 
     it("passes backend data correctly to PublicMatchCard components", () => {
-      render(<GuestHomePage />);
+      render(<GuestHomePage />, { wrapper: TestWrapper });
 
       // featuredMatchesからのデータがPublicMatchCardに正しく渡されることを確認
       // 実際のコンポーネントが正しくレンダリングされることを確認
@@ -106,12 +121,12 @@ describe("Guest Page Integration Tests", () => {
     it("renders without crashing with real backend data", () => {
       // 実際のバックエンドデータでコンポーネントがクラッシュしないことを確認
       expect(() => {
-        render(<GuestHomePage />);
+        render(<GuestHomePage />, { wrapper: TestWrapper });
       }).not.toThrow();
     });
 
     it("handles real team data correctly", () => {
-      render(<GuestHomePage />);
+      render(<GuestHomePage />, { wrapper: TestWrapper });
 
       // 実際のチーム名（日本語）が表示されることを期待
       // これらは実際のfeaturedMatchesデータに含まれているチーム名
@@ -139,23 +154,23 @@ describe("Guest Page Integration Tests", () => {
     });
 
     it("handles real match scores from backend", () => {
-      render(<GuestHomePage />);
+      render(<GuestHomePage />, { wrapper: TestWrapper });
 
       // 実際のスコアパターンが表示されることを確認
       // スコアは "数字-数字" の形式で表示される
       const scoreElements = document.querySelectorAll(
-        ".text-2xl.font-bold.text-white",
+        ".text-2xl.font-bold.text-white"
       );
       expect(scoreElements.length).toBeGreaterThan(0);
     });
 
     it("displays real match dates from backend", () => {
-      render(<GuestHomePage />);
+      render(<GuestHomePage />, { wrapper: TestWrapper });
 
       // 実際の日付が表示されることを確認
       // カレンダーアイコンと一緒に表示される
       const dateElements = document.querySelectorAll(
-        ".flex.items-center.text-gray-400.text-sm",
+        ".flex.items-center.text-gray-400.text-sm"
       );
       expect(dateElements.length).toBeGreaterThan(0);
     });
@@ -163,7 +178,7 @@ describe("Guest Page Integration Tests", () => {
 
   describe("User Experience with Real Data", () => {
     it("renders main sections in correct order", () => {
-      render(<GuestHomePage />);
+      render(<GuestHomePage />, { wrapper: TestWrapper });
 
       // Hero section, Featured Matches, Features, CTAの順序で表示される
       const sections = document.querySelectorAll("section");
@@ -171,7 +186,7 @@ describe("Guest Page Integration Tests", () => {
     });
 
     it("featured matches section contains real match cards", () => {
-      render(<GuestHomePage />);
+      render(<GuestHomePage />, { wrapper: TestWrapper });
 
       // Featured Matchesセクションが存在することを確認
       const featuredSection =
@@ -184,7 +199,7 @@ describe("Guest Page Integration Tests", () => {
     });
 
     it("match detail links are properly generated", () => {
-      render(<GuestHomePage />);
+      render(<GuestHomePage />, { wrapper: TestWrapper });
 
       // 試合詳細へのリンクが正しく生成されることを確認
       const detailLinks = document.querySelectorAll('a[href^="/matches/"]');

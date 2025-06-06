@@ -7,7 +7,7 @@ namespace App\Http\Resources\Guest;
 use App\Http\Resources\ApiResourceCollection;
 use App\Models\Game;
 
-class LatestGamesCollection extends ApiResourceCollection
+class LatestFinishedGamesCollection extends ApiResourceCollection
 {
     /**
      * Transform the resource collection into an array.
