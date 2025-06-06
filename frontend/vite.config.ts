@@ -20,5 +20,12 @@ export default defineConfig({
     host: true,
     // You can change the port for starting up.
     port: 3000,
+    proxy: {
+      "/api": {
+        target: "http://172.17.0.1:8000",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });

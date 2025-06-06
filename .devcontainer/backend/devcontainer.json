@@ -22,11 +22,11 @@
       },
       "extensions": [
         "junstyle.php-cs-fixer",
-        // "bmewburn.vscode-intelephense-client",
-        // "onecentlin.laravel-extension-pack",
         "streetsidesoftware.code-spell-checker",
         "damianbal.vs-phpclassgen",
-        "gruntfuggly.todo-tree"
+        "gruntfuggly.todo-tree",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
       ]
     }
   },

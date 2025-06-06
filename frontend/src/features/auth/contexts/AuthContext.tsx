@@ -1,34 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-
-/**
- * ユーザー情報の型定義
- */
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  email_verified_at?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-/**
- * 認証コンテキストの型定義
- */
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
-}
-
-/**
- * 認証コンテキストの作成
- */
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import React, { useEffect, useState } from "react";
+import {
+  AuthContext,
+  type AuthContextType,
+  type User,
+} from "./AuthContextDefinition";
 
 /**
  * APIのベースURL（環境変数から取得、デフォルトはlocalhost:8000）
@@ -65,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // CSRF保護の初期化
       await initializeCsrf();
 
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,12 +66,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   /**
    * 新規登録処理
    */
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string
+  ) => {
     try {
       // CSRF保護の初期化
       await initializeCsrf();
 
-      const response = await fetch(`${API_BASE_URL}/register`, {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name,
           email,
           password,
-          password_confirmation: password,
+          password_confirmation: passwordConfirmation,
         }),
       });
 
@@ -129,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const logout = async () => {
     try {
-      await fetch(`${API_BASE_URL}/logout`, {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -148,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const checkAuth = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user`, {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -171,11 +151,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   /**
+   * パスワードリセット処理
+   */
+  const forgotPassword = async (email: string) => {
+    try {
+      await initializeCsrf();
+
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "パスワードリセットメールの送信に失敗しました"
+        );
+      }
+    } catch (error) {
+      console.error("Forgot password failed:", error);
+      throw error;
+    }
+  };
+
+  /**
    * 初期化時に認証状態をチェック
    */
   useEffect(() => {
     checkAuth();
   }, []);
+
+  /**
+   * トークンの存在確認（セッションベース認証では常にfalse）
+   */
+  const hasToken = () => {
+    return false; // セッションベース認証ではトークンを使用しない
+  };
+
+  /**
+   * トークンの削除（セッションベース認証では何もしない）
+   */
+  const removeToken = () => {
+    // セッションベース認証ではトークンを使用しないため何もしない
+  };
 
   const value: AuthContextType = {
     user,
@@ -185,23 +208,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     checkAuth,
+    forgotPassword,
+    hasToken,
+    removeToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
-/**
- * 認証コンテキストを使用するためのカスタムフック
- */
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
-
-/**
- * 型のエクスポート
- */
-export type { User, AuthContextType };

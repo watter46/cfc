@@ -1,36 +1,36 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext.tsx";
-import SocialLoginButtons from "./SocialLoginButtons.tsx";
+import { useLogin } from "../hooks/useAuthQuery";
+import { getErrorMessage } from "../utils/errorHandling";
+import SocialLoginButtons from "./SocialLoginButtons";
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth();
+  const loginMutation = useLogin();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setIsLoading(true);
 
     try {
-      await login(email, password);
+      await loginMutation.mutateAsync({ email, password });
+      // トークンは自動的にuseLoginフックで保存される
       navigate("/");
-    } catch {
-      setError(
-        "ログインに失敗しました。メールアドレスとパスワードを確認してください。",
-      );
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      // エラーはuseLoginフックで自動的に処理される
+      console.error("Login failed:", error);
     }
   };
+
+  const errorMessage = loginMutation.error
+    ? getErrorMessage(loginMutation.error)
+    : "";
+  const isLoading = loginMutation.isPending;
 
   return (
     <div className="card-glass p-8 w-full max-w-md mx-auto">
@@ -38,9 +38,9 @@ const LoginForm: React.FC = () => {
         おかえりなさい
       </h2>
 
-      {error && (
+      {errorMessage && (
         <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-md text-red-400 text-sm">
-          {error}
+          {errorMessage}
         </div>
       )}
 

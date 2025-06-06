@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth/contexts/AuthContext.tsx";
+import { useAuth } from "../../../features/auth/hooks/useAuth";
 import { LogOut, User, Menu, X } from "lucide-react";
 
 const Header: React.FC = () => {
@@ -65,6 +65,15 @@ const Header: React.FC = () => {
                 >
                   <User size={18} />
                   <span>プロフィール</span>
+                </Link>
+
+                {/* Auth Test button */}
+                <Link
+                  to="/auth-test"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-300 hover:text-neon-purple hover:bg-space-800/50 transition-all duration-200"
+                >
+                  <span>🔧</span>
+                  <span>認証テスト</span>
                 </Link>
 
                 {/* Logout button */}

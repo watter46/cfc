@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/features/auth/contexts/AuthContext.tsx";
-import SocialLoginButtons from "./SocialLoginButtons.tsx";
+import { useRegister } from "../hooks/useAuthQuery";
+import { getErrorMessage } from "../utils/errorHandling";
+import SocialLoginButtons from "./SocialLoginButtons";
 
 const RegisterForm: React.FC = () => {
   const [name, setName] = useState("");
@@ -11,37 +12,84 @@ const RegisterForm: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [validationError, setValidationError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [debugInfo, setDebugInfo] = useState("");
 
-  const { register } = useAuth();
+  const registerMutation = useRegister();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setValidationError("");
+    setSuccessMessage("");
+    setDebugInfo("");
 
+    // フロントエンドバリデーション
     if (password !== confirmPassword) {
-      setError("パスワードが一致しません。");
+      setValidationError("パスワードが一致しません。");
       return;
     }
 
     if (password.length < 6) {
-      setError("パスワードは6文字以上で入力してください。");
+      setValidationError("パスワードは6文字以上で入力してください。");
       return;
     }
 
-    setIsLoading(true);
+    setDebugInfo("登録処理を開始中...");
 
     try {
-      await register(name, email, password);
-      navigate("/");
-    } catch {
-      setError("登録に失敗しました。入力内容を確認してください。");
-    } finally {
-      setIsLoading(false);
+      // 登録データをログ出力（パスワードは除く）
+      console.log("Registration attempt:", {
+        name,
+        email,
+        passwordLength: password.length,
+      });
+      setDebugInfo(
+        `送信データ: 名前=${name}, メール=${email}, パスワード長=${password.length}`
+      );
+
+      const result = await registerMutation.mutateAsync({
+        name,
+        email,
+        password,
+        password_confirmation: confirmPassword,
+      });
+      console.log("Registration successful:", result);
+
+      setSuccessMessage(
+        "アカウントが正常に作成されました！ログインしています..."
+      );
+      setDebugInfo(`登録成功 - トークン受信: ${result.token ? "✓" : "✗"}`);
+
+      // 短い遅延後にホームページにリダイレクト
+      setTimeout(() => {
+        setDebugInfo("ホームページへ移動...");
+        navigate("/");
+      }, 1500);
+    } catch (error: unknown) {
+      console.error("Registration failed:", error);
+
+      // より詳細なエラー情報を表示
+      let errorDetails = "詳細不明";
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response: { status: number; data: unknown };
+        };
+        errorDetails = `ステータス: ${axiosError.response.status}, データ: ${JSON.stringify(axiosError.response.data)}`;
+      } else if (error && typeof error === "object" && "message" in error) {
+        errorDetails = (error as { message: string }).message;
+      }
+
+      setDebugInfo(`登録エラー: ${errorDetails}`);
     }
   };
+
+  const apiErrorMessage = registerMutation.error
+    ? getErrorMessage(registerMutation.error)
+    : "";
+  const errorMessage = validationError || apiErrorMessage;
+  const isLoading = registerMutation.isPending;
 
   return (
     <div className="card-glass p-8 w-full max-w-md mx-auto">
@@ -49,9 +97,21 @@ const RegisterForm: React.FC = () => {
         アカウント作成
       </h2>
 
-      {error && (
+      {errorMessage && (
         <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-md text-red-400 text-sm">
-          {error}
+          {errorMessage}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-md text-green-400 text-sm">
+          {successMessage}
+        </div>
+      )}
+
+      {debugInfo && (
+        <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md text-blue-400 text-sm">
+          デバッグ: {debugInfo}
         </div>
       )}
 
