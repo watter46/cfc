@@ -9,7 +9,7 @@ use App\Models\Season;
 use App\UseCases\Admin\Game\Services\Rateable\RateableGamePolicy;
 use Illuminate\Support\Collection;
 
-class FetchLatestGames
+class FetchLatestFinishedGames
 {
     private const LATEST_GAMES_LIMIT = 5;
 
@@ -47,8 +47,8 @@ class FetchLatestGames
                     ->orderByDesc('started_at')
                     ->take(self::LATEST_GAMES_LIMIT);
             },
-                'games.homeTeam:id,logo_path',
-                'games.awayTeam:id,logo_path',
+                'games.homeTeam:id,name,logo_path',
+                'games.awayTeam:id,name,logo_path',
             ])
             ->firstOrFail('id')
             ->games
