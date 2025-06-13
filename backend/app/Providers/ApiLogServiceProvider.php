@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
-class ApiLogServiceProvider extends ServiceProvider
+final class ApiLogServiceProvider extends ServiceProvider
 {
     /**
      * Register services.

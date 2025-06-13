@@ -1,17 +1,19 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Providers;
 
+use ArrayAccess;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
+use SplObjectStorage;
 
 /**
  * @mixin \Illuminate\Support\Collection
  */
-class MacroCollectionServiceProvider extends ServiceProvider
+final class MacroCollectionServiceProvider extends ServiceProvider
 {
     /**
      * Register services.
@@ -31,7 +33,7 @@ class MacroCollectionServiceProvider extends ServiceProvider
          * どの階層でもコレクションのメソッドを使用可能にする
          */
         Collection::macro('deepCollect', function () {
-            $processed = new \SplObjectStorage();
+            $processed = new SplObjectStorage;
 
             $wrap = function ($value) use (&$wrap, &$processed) {
                 if (is_array($value)) {
@@ -67,8 +69,8 @@ class MacroCollectionServiceProvider extends ServiceProvider
          * ドット記法を使用してネストされたプロパティにアクセスし、
          * 元の値をそのまま返す
          */
-        Collection::macro('getDotRaw', function (string $key) {
-            return data_get($this, $key);
+        Collection::macro('getDotRaw', function (string $key, mixed $default = null) {
+            return data_get($this, $key) ?? $default;
         });
 
         /*
@@ -128,53 +130,128 @@ class MacroCollectionServiceProvider extends ServiceProvider
                 ->values();
         });
 
-        /*
-        * コレクション内の指定キーを変換マップに基づいて置き換えます。
-        *
-        * @param Collection<int|string, mixed> $replacements 変換マップ（キー: 元のID、値: 置き換え後の値）
-        * @param string[] $targetKeys 変換対象とするキー名の配列（'team_id' や 'user_id' など）
-        * @param string[] $nullableKeys nullの許可されたキー名（デフォルトは空配列）
-        *
-        * @return Collection 置き換え後のコレクション
-        *
-        * @throws \InvalidArgumentException 対象キーが存在しない場合や、nullが許可されていない場合など
-        */
+        /**
+         * 指定したキーの値をマッピングデータに基づいて置換するマクロ
+         * コレクションを含む値でも正しく変換できるよう再帰処理を強化
+         *
+         * @param  Collection  $replacements  キー変換マップ（元の値 => 置換後の値）
+         * @param  array  $targetKeys  変換対象のキー名配列
+         * @param  array  $nullableKeys  null値を許容するキー名配列
+         * @return Collection 変換後のコレクション
+         *
+         * @throws InvalidArgumentException 変換エラー時
+         */
         Collection::macro('replaceKeysFromMap', function (
             Collection $replacements,
             array $targetKeys,
-            array $nullableKeys = []
-        ) {
+            array $nullableKeys = [],
+        ): Collection {
             $replace = function ($item) use (&$replace, $replacements, $targetKeys, $nullableKeys) {
-                if ($item instanceof Collection) {
-                    return $item->map($replace);
-                }
-                if (is_array($item)) {
-                    $item = collect($item)->map($replace)->all();
-                }
-                if (is_array($item)) {
-                    foreach ($targetKeys as $key) {
-                        if (! array_key_exists($key, $item)) {
-                            throw new \InvalidArgumentException("キー '{$key}' が存在しません。");
-                        }
-                        $value = $item[$key];
-                        if (is_null($value)) {
-                            if (! in_array($key, $nullableKeys, true)) {
-                                throw new \InvalidArgumentException("キー '{$key}' に null は許可されていません。");
-                            }
+                // 配列またはコレクションなら再帰的に処理
+                if (is_array($item) || $item instanceof Collection || $item instanceof ArrayAccess) {
+                    $result = $item instanceof Collection ? collect([]) : [];
 
-                            continue;
+                    foreach ($item as $key => $value) {
+                        // コレクションの場合はコレクションのまま再帰処理
+                        if ($value instanceof Collection) {
+                            $result[$key] = $replace($value);
                         }
-                        if (! $replacements->has($value)) {
-                            throw new \InvalidArgumentException("変換マップに存在しないID '{$value}' が指定されました（キー: {$key}）。");
+                        // 配列の場合は再帰処理
+                        elseif (is_array($value)) {
+                            $result[$key] = $replace($value);
                         }
-                        $item[$key] = $replacements[$value];
+                        // 対象キーの場合はマッピングで置換
+                        elseif (in_array($key, $targetKeys, true)) {
+                            // null値チェック
+                            if ($value === null) {
+                                if (! in_array($key, $nullableKeys, true)) {
+                                    throw new InvalidArgumentException("キー '{$key}' に null は許可されていません。");
+                                }
+                                $result[$key] = null;
+                            } else {
+                                // 置換処理
+                                if (! $replacements->has($value)) {
+                                    throw new InvalidArgumentException("変換マップに存在しないID '{$value}' が指定されました（キー: {$key}）。");
+                                }
+                                $result[$key] = $replacements->get($value);
+                            }
+                        } else {
+                            // 対象外のキーはそのまま
+                            $result[$key] = $value;
+                        }
                     }
+
+                    // 元の型を維持
+                    return $item instanceof Collection ? collect($result) : $result;
                 }
 
                 return $item;
             };
 
             return $this->map($replace);
+        });
+
+        /**
+         * 指定したキーのみを抽出し任意のキー名にマップ（ネスト構造維持）
+         *
+         * ネストしたコレクションから特定のキーのみを取得し、
+         * 任意のキー名でマッピングしながらネスト構造を維持します。
+         *
+         * @param  array  $keyMap  マッピング定義配列（新キー => 元キーパス）
+         * @return Collection 指定キーのみを含む新しいコレクション
+         */
+        Collection::macro('mapOnly', function (array $keyMap): Collection {
+            return $this->map(function ($item) use ($keyMap) {
+                $result = [];
+
+                foreach ($keyMap as $newKey => $dotKey) {
+                    // 数値インデックスの場合は元のキーを使用（従来の互換性）
+                    if (is_numeric($newKey)) {
+                        // 元の mapOnly 機能をそのまま維持
+                        $value = data_get($item, $dotKey);
+
+                        // ネスト構造を維持してセット
+                        data_set($result, $dotKey, $value);
+                    } else {
+                        // キー名変更の場合：値を取得して新しいキーパスにセット
+                        $value = data_get($item, $dotKey);
+
+                        // 新しいキー名でネスト構造を維持
+                        data_set($result, $newKey, $value);
+                    }
+                }
+
+                return $result;
+            });
+        });
+
+        /**
+         * 指定したキーのみを抽出（フラットな構造で任意のキー名を指定）
+         *
+         * ネスト構造を維持せず、フラットな配列として返します。
+         * キー名も自由に指定できるため、フロントエンド向けの
+         * カスタマイズされたデータ構造を簡単に作成できます。
+         *
+         * @param  array  $keyMap  抽出するキーのマップ（新しいキー名 => ドット記法のキー）
+         * @return Collection フラットな構造の新しいコレクション
+         */
+        Collection::macro('mapOnlyFlat', function (array $keyMap): Collection {
+            return $this->map(function ($item) use ($keyMap) {
+                $result = [];
+
+                foreach ($keyMap as $newKey => $dotKey) {
+                    // 数値インデックスの場合は元のキーをそのまま使用
+                    if (is_numeric($newKey)) {
+                        $finalKey = str_replace('.', '_', $dotKey);
+                    } else {
+                        $finalKey = $newKey;
+                    }
+
+                    $result[$finalKey] = data_get($item, $dotKey);
+                }
+
+                return $result;
+            });
         });
     }
 }

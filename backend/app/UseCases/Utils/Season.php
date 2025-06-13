@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\UseCases\Utils;
 
@@ -14,8 +14,7 @@ final readonly class Season
 
     private function __construct(
         public int $year,
-    ) {
-    }
+    ) {}
 
     public static function isCurrent(Carbon $startDate, Carbon $endDate): bool
     {
@@ -24,8 +23,6 @@ final readonly class Season
 
     /**
      * 現在のシーズンを取得
-     *
-     * @return self
      */
     public static function current(): self
     {
@@ -33,7 +30,7 @@ final readonly class Season
 
         $season = $now->year;
 
-        if (1 <= $now->month && $now->month <= self::SEASON_END_MONTH) {
+        if ($now->month >= 1 && $now->month <= self::SEASON_END_MONTH) {
             $season -= 1;
         }
 
@@ -42,15 +39,12 @@ final readonly class Season
 
     /**
      * 日付からシーズンを取得
-     *
-     * @param  Carbon $date
-     * @return self
      */
     public static function fromDate(Carbon $date): self
     {
         $season = $date->year;
 
-        if (1 <= $date->month && $date->month <= self::SEASON_END_MONTH) {
+        if ($date->month >= 1 && $date->month <= self::SEASON_END_MONTH) {
             $season -= 1;
         }
 
@@ -59,9 +53,6 @@ final readonly class Season
 
     /**
      * 年からシーズンを取得
-     *
-     * @param  int  $year
-     * @return self
      */
     public static function fromYear(int $year): self
     {
@@ -78,6 +69,6 @@ final readonly class Season
         $currentYear = Str::substr($this->year, 2, 2);
         $nextYear = Str::substr($this->year + 1, 2, 2);
 
-        return $currentYear . '/' . $nextYear;
+        return $currentYear.'/'.$nextYear;
     }
 }

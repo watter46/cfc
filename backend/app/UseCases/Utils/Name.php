@@ -1,18 +1,18 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\UseCases\Utils;
 
 use Illuminate\Support\Str;
 
-readonly class Name
+final readonly class Name
 {
     public function __construct(
         private string $firstName,
         private string $firstNamePlain,
         private ?string $lastName = null,
-        private ?string $lastNamePlain = null
+        private ?string $lastNamePlain = null,
     ) {
         //
     }
@@ -29,7 +29,7 @@ readonly class Name
             $first,
             $firstPlain,
             $last,
-            $lastPlain
+            $lastPlain,
         );
     }
 
@@ -58,7 +58,7 @@ readonly class Name
             $this->lastName,
             $this->lastNamePlain,
             $this->firstName,
-            $this->firstNamePlain
+            $this->firstNamePlain,
         );
     }
 
@@ -86,7 +86,7 @@ readonly class Name
             return $this->getFirstName();
         }
 
-        return $this->getFirstName() . ' ' . $this->getLastName();
+        return $this->getFirstName().' '.$this->getLastName();
     }
 
     public function getShortenName(): string
@@ -97,7 +97,7 @@ readonly class Name
 
         $shortenFirstName = Str::substr($this->getFirstName(), 0, 1);
 
-        return $shortenFirstName . '. ' . $this->getLastName();
+        return $shortenFirstName.'. '.$this->getLastName();
     }
 
     public function getFullNamePlain(): string
@@ -106,7 +106,7 @@ readonly class Name
             return $this->getFirstNamePlain();
         }
 
-        return $this->getFirstNamePlain() . ' ' . $this->getLastNamePlain();
+        return $this->getFirstNamePlain().' '.$this->getLastNamePlain();
     }
 
     public function getShortenNamePlain(): string
@@ -117,7 +117,7 @@ readonly class Name
 
         $shortenFirstNamePlain = Str::substr($this->getFirstNamePlain(), 0, 1);
 
-        return $shortenFirstNamePlain . '. ' . $this->getLastNamePlain();
+        return $shortenFirstNamePlain.'. '.$this->getLastNamePlain();
     }
 
     private function getFirstName(): string

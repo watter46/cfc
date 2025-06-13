@@ -1,13 +1,15 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\UseCases\Utils;
 
-class Number
+use DomainException;
+
+final class Number
 {
     private function __construct(
-        public readonly int $number
+        public readonly int $number,
     ) {
         //
     }
