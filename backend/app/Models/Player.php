@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Models;
 
@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Player extends Model
+final class Player extends Model
 {
     use HasFactory;
 
@@ -27,11 +27,8 @@ class Player extends Model
         'position',
         'number',
         'api_player_id',
-        'nationality',
-        'birth_date',
-        'height',
-        'weight',
         'image_path',
+        'is_active',
         'is_fetched',
     ];
 
@@ -43,7 +40,7 @@ class Player extends Model
     protected function casts(): array
     {
         return [
-            'birth_date' => 'date',
+            'is_active'  => 'boolean',
             'is_fetched' => 'boolean',
         ];
     }

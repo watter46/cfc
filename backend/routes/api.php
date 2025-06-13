@@ -1,12 +1,14 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use App\Http\Controllers\Guest\GuestController;
 use App\Http\Controllers\User\AuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [GuestController::class, 'index']);
+Route::get('/dev', [GuestController::class, 'dev']);
+Route::get('/find', [GuestController::class, 'find']);
 
 // 認証不要なルート
 Route::prefix('auth')->group(function () {

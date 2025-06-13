@@ -8,9 +8,12 @@ use Illuminate\Support\Facades\Storage;
 
 abstract class AbstractImageRepository
 {
-    private const LINK       = 'storage';
-    private const DISK       = 'public';
-    private const BASE_DIR   = 'image';
+    private const LINK = 'storage';
+
+    private const DISK = 'public';
+
+    private const BASE_DIR = 'image';
+
     private string $fileName = '';
 
     abstract public function getDirName(): string;
@@ -45,12 +48,12 @@ abstract class AbstractImageRepository
 
     private function path(): string
     {
-        return self::LINK . '/' . $this->getDirPath() . '/' . $this->fileName;
+        return self::LINK.'/'.$this->getDirPath().'/'.$this->fileName;
     }
 
     private function getDirPath(): string
     {
-        return self::BASE_DIR . '/' . $this->getDirName();
+        return self::BASE_DIR.'/'.$this->getDirName();
     }
 
     private function ensureDirectoryExists()

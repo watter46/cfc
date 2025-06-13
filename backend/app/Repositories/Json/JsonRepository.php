@@ -1,12 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Repositories\Json;
 
 class JsonRepository
 {
     private const EXTENSION = '.json';
+
     private const BASE_DIR = 'database/data';
 
     private string $dirName;
@@ -43,12 +44,12 @@ class JsonRepository
 
     private function path(): string
     {
-        return base_path($this->getDirPath() . '/' . $this->fileName . self::EXTENSION);
+        return base_path($this->getDirPath().'/'.$this->fileName.self::EXTENSION);
     }
 
     private function getDirPath(): string
     {
-        return self::BASE_DIR . '/' . $this->dirName;
+        return self::BASE_DIR.'/'.$this->dirName;
     }
 
     private function ensureDirectoryExists()

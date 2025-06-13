@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Console\Commands;
 
 use App\UseCases\Fixtures\ImportFixtureUseCase;
 use Illuminate\Console\Command;
 
-class ImportFixtureCommand extends Command
+final class ImportFixtureCommand extends Command
 {
     /**
      * コンソールコマンドの名前と説明
@@ -33,7 +33,7 @@ class ImportFixtureCommand extends Command
         $fixtureId = $this->argument('fixture_id');
         $fromJson = $this->option('json');
 
-        $this->info("Importing fixture: {$fixtureId}" . ($fromJson ? ' from JSON file' : ' from API'));
+        $this->info("Importing fixture: {$fixtureId}".($fromJson ? ' from JSON file' : ' from API'));
 
         if ($fromJson) {
             $success = $importFixtureUseCase->executeFromJsonFile((string) $fixtureId);

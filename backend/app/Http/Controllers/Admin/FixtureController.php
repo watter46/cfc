@@ -1,15 +1,16 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\UseCases\Fixtures\ImportFixtureUseCase;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class FixtureController extends Controller
+final class FixtureController extends Controller
 {
     /**
      * API Football から試合データをインポート
@@ -18,7 +19,7 @@ class FixtureController extends Controller
     {
         $request->validate([
             'fixture_id' => 'required|integer',
-            'from_json' => 'boolean',
+            'from_json'  => 'boolean',
         ]);
 
         $fixtureId = $request->input('fixture_id');
@@ -33,23 +34,23 @@ class FixtureController extends Controller
 
             if ($success) {
                 return response()->json([
-                    'status' => 'success',
+                    'status'  => 'success',
                     'message' => "Fixture {$fixtureId} imported successfully",
                 ]);
             } else {
                 return response()->json([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => "Failed to import fixture {$fixtureId}",
                 ], 500);
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error("Error importing fixture: {$fixtureId}", [
                 'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'trace'     => $e->getTraceAsString(),
             ]);
 
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => "Error importing fixture: {$e->getMessage()}",
             ], 500);
         }
@@ -71,23 +72,23 @@ class FixtureController extends Controller
 
             if ($success) {
                 return response()->json([
-                    'status' => 'success',
+                    'status'  => 'success',
                     'message' => "Fixture {$fixtureId} updated successfully",
                 ]);
             } else {
                 return response()->json([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => "Failed to update fixture {$fixtureId}",
                 ], 500);
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error("Error updating fixture: {$fixtureId}", [
                 'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'trace'     => $e->getTraceAsString(),
             ]);
 
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => "Error updating fixture: {$e->getMessage()}",
             ], 500);
         }

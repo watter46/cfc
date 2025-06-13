@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Models\Builders;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
-class GameBuilder extends Builder
+final class GameBuilder extends Builder
 {
     public function isEnd()
     {
@@ -16,9 +16,6 @@ class GameBuilder extends Builder
 
     /**
      * リーグIDでフィルタリングする
-     *
-     * @param  int|null $leagueId
-     * @return self
      */
     public function byLeague(?int $leagueId = null): self
     {
@@ -29,8 +26,6 @@ class GameBuilder extends Builder
 
     /**
      * 今日までの試合を取得する
-     *
-     * @return self
      */
     public function untilToday(): self
     {
@@ -41,9 +36,6 @@ class GameBuilder extends Builder
 
     /**
      * 特定のapiFixtureIdの試合を取得する
-     *
-     * @param  int  $apiFixtureId
-     * @return self
      */
     public function apiFixtureId(int $apiFixtureId): self
     {
@@ -52,8 +44,6 @@ class GameBuilder extends Builder
 
     /**
      * 次の試合を取得する
-     *
-     * @return self
      */
     public function next(): self
     {
@@ -64,9 +54,6 @@ class GameBuilder extends Builder
 
     /**
      * 数日前から今までの試合を取得する
-     *
-     * @param  int  $days
-     * @return self
      */
     public function withinDays(int $days = 3): self
     {
@@ -75,7 +62,7 @@ class GameBuilder extends Builder
             [
                 Carbon::now('UTC')->subDays($days),
                 Carbon::now('UTC'),
-            ]
+            ],
         );
     }
 }

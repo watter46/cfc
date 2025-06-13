@@ -18,13 +18,15 @@ return new class () extends Migration {
             $table->foreignId('season_id')->constrained()->onDelete('cascade');
             $table->string('name')->comment('選手名');
             $table->string('name_plain')->comment('選手名（アクセント無し）');
-            $table->string('position')->comment('ポジション');
+            $table->string('position')->nullable()->comment('ポジション');
             $table->integer('number')->nullable()->comment('背番号');
-            $table->integer('api_player_id')->unique()->comment('APIプレイヤーID');
+            $table->integer('api_player_id')->comment('APIプレイヤーID');
             $table->string('image_path')->nullable()->comment('選手画像パス');
-            $table->boolean('is_active')->default(true)->comment('現役判定');
-            $table->boolean('is_fetched')->default(false)->comment('データ取得済み判定');
+            $table->boolean('is_active')->default(true)->comment('所属判定');
+            $table->boolean('is_fetched')->default(false)->comment('画像データ取得済み判定');
             $table->timestamps();
+
+            $table->unique(['api_player_id', 'team_id', 'season_id']);
         });
     }
 

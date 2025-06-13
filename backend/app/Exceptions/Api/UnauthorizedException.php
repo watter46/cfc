@@ -1,16 +1,16 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Exceptions\Api;
 
-class UnauthorizedException extends ApiException
+final class UnauthorizedException extends ApiException
 {
     /**
      * コンストラクタ
      *
-     * @param string     $message エラーメッセージ
-     * @param array|null $errors  エラー詳細
+     * @param  string  $message  エラーメッセージ
+     * @param  array|null  $errors  エラー詳細
      */
     public function __construct(string $message = 'Unauthorized', ?array $errors = null)
     {

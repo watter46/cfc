@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Models;
 
@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Auth;
 
-class GamePlayer extends Model
+final class GamePlayer extends Model
 {
     use HasFactory;
 
@@ -43,8 +43,8 @@ class GamePlayer extends Model
     protected function casts(): array
     {
         return [
-            'is_starter' => 'boolean',
-            'api_rating' => 'float',
+            'is_starter'      => 'boolean',
+            'api_rating'      => 'float',
             'avg_user_rating' => 'float',
         ];
     }

@@ -1,12 +1,12 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MyClub extends Model
+final class MyClub extends Model
 {
     protected $fillable = [
         'user_id',

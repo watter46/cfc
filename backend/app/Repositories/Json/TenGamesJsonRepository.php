@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Repositories\Json;
 
@@ -13,7 +13,7 @@ use App\Models\Season;
 use App\Models\Team;
 use Illuminate\Support\Collection;
 
-class TenGamesJsonRepository extends JsonRepository
+final class TenGamesJsonRepository extends JsonRepository
 {
     private const FIXTURE_ID_LIST = [
         1208074,

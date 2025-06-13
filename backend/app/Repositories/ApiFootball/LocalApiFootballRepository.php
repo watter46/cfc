@@ -1,32 +1,29 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Repositories\ApiFootball;
 
 use App\Repositories\Json\JsonRepository;
 use App\UseCases\Admin\Game\ApiFootballRepositoryInterface;
-use App\UseCases\Admin\Game\Dto\ApiFootballDto\FixtureDto;
-use App\UseCases\Admin\Game\Dto\ApiFootballDto\FixturesDto;
+use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\FixtureDetailDto;
+use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\FixtureListDto;
 
-class LocalApiFootballRepository implements ApiFootballRepositoryInterface
+final class LocalApiFootballRepository implements ApiFootballRepositoryInterface
 {
-    public function __construct(private JsonRepository $repository)
-    {
+    public function __construct(private JsonRepository $repository) {}
 
-    }
-
-    public function fetchFixtures(int $season): FixturesDto
+    public function fetchFixtures(int $season, ?int $leagueId = null): FixtureListDto
     {
         $data = $this->repository->getCollection('api/api_football/fixtures', $season);
 
-        return FixturesDto::from($data);
+        return FixtureListDto::fromApiResponse($data);
     }
 
-    public function fetchFixture(int $apiFixtureId): FixtureDto
+    public function fetchFixtureDetail(int $apiFixtureId): FixtureDetailDto
     {
         $data = $this->repository->getCollection('api/api_football/fixture', $apiFixtureId);
 
-        return FixtureDto::fromFixture($data);
+        return FixtureDetailDto::fromCollection($data);
     }
 }
