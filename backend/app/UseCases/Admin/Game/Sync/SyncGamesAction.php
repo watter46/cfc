@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\UseCases\Admin\Game\Sync;
 
+use App\Events\GamesSynced;
 use App\Models\Game;
 use App\Models\League;
 use App\Models\Season;
@@ -30,29 +31,27 @@ final readonly class SyncGamesAction
 
     /**
      * 指定されたシーズンの試合データを同期
-     *
-     * @return array{games: int, teams: int, leagues: int, seasons: int}
      */
-    public function execute(int $season): array
+    public function execute(int $season): void
     {
         $fixturesListDto = $this->apiFootballRepository->fetchFixtures($season);
 
-        return DB::transaction(function () use ($fixturesListDto) {
-            $seasonsCount = $this->updateSeason($fixturesListDto);
-            $leaguesCount = $this->updateLeagues($fixturesListDto);
-            $teamsCount = $this->updateTeams($fixturesListDto);
-            $gamesCount = $this->updateGames($fixturesListDto);
+        // DB::transaction(function () use ($fixturesListDto) {
+        //     $this->updateSeason($fixturesListDto);
+        //     $this->updateLeagues($fixturesListDto);
+        //     $this->updateTeams($fixturesListDto);
+        //     $this->updateGames($fixturesListDto);
+        // });
 
-            return [
-                'seasons' => $seasonsCount,
-                'leagues' => $leaguesCount,
-                'teams'   => $teamsCount,
-                'games'   => $gamesCount,
-            ];
-        });
+        $eventData = collect([
+            'apiTeamIds'   => $fixturesListDto->apiTeamIds(),
+            'apiLeagueIds' => $fixturesListDto->apiLeagueIds(),
+        ]);
+
+        GamesSynced::dispatch($eventData);
     }
 
-    public function updateSeason(FixtureListDto $fixturesListDto): int
+    public function updateSeason(FixtureListDto $fixturesListDto): void
     {
         $seasonsData = $this->seasonTransformer->toUpsertData($fixturesListDto);
 
@@ -65,11 +64,9 @@ final readonly class SyncGamesAction
             ['year'],
             ['start_date', 'end_date', 'is_current', 'updated_at'],
         );
-
-        return count($seasonsData);
     }
 
-    public function updateLeagues(FixtureListDto $fixturesListDto): int
+    public function updateLeagues(FixtureListDto $fixturesListDto): void
     {
         $leaguesData = $this->leagueTransformer->toUpsertData($fixturesListDto);
 
@@ -82,11 +79,9 @@ final readonly class SyncGamesAction
             ['api_league_id'],
             ['name', 'type', 'logo_path', 'updated_at'],
         );
-
-        return count($leaguesData);
     }
 
-    public function updateTeams(FixtureListDto $fixturesListDto): int
+    public function updateTeams(FixtureListDto $fixturesListDto): void
     {
         $teamsData = $this->teamTransformer->toUpsertData($fixturesListDto);
 
@@ -99,16 +94,13 @@ final readonly class SyncGamesAction
             ['api_team_id'],
             ['name', 'logo_path', 'updated_at'],
         );
-
-        return count($teamsData);
     }
 
-    public function updateGames(FixtureListDto $fixturesListDto): int
+    public function updateGames(FixtureListDto $fixturesListDto): void
     {
         $relationIds = $this->resolveGameRelationIds($fixturesListDto);
 
-        $gamesData = $this->gameTransformer
-            ->toUpsertData($fixturesListDto, $relationIds);
+        $gamesData = $this->gameTransformer->toUpsertData($fixturesListDto, $relationIds);
 
         if (empty($gamesData)) {
             throw new EmptyApiResponseException('ゲーム');
@@ -123,8 +115,6 @@ final readonly class SyncGamesAction
                 'is_details_fetched', 'started_at', 'finished_at', 'updated_at',
             ],
         );
-
-        return count($gamesData);
     }
 
     /**

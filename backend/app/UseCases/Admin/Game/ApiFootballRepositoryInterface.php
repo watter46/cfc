@@ -24,4 +24,20 @@ interface ApiFootballRepositoryInterface
      * @return FixtureDetailDto 試合詳細情報
      */
     public function fetchFixtureDetail(int $apiFixtureId): FixtureDetailDto;
+
+    /**
+     * 指定されたAPIリーグIDに対応するリーグ画像を取得する
+     *
+     * @param  int  $apiLeagueId  APIのリーグID
+     * @return string 取得したリーグ画像のバイナリデータ
+     */
+    public function fetchLeagueImage(int $apiLeagueId): string;
+
+    /**
+     * 指定されたAPIチームIDに対応するチーム画像を取得する
+     *
+     * @param  int  $apiTeamId  APIのチームID
+     * @return string 取得したチーム画像のバイナリデータ
+     */
+    public function fetchTeamImage(int $apiTeamId): string;
 }
