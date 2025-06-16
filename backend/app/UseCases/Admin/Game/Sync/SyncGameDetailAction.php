@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\UseCases\Admin\Game\Sync;
 
+use App\Events\GameDetailSynced;
 use App\Models\Game;
 use App\Models\GamePlayer;
 use App\Models\Player;
 use App\Models\PlayerStatistic;
 use App\UseCases\Admin\Game\ApiFootballRepositoryInterface;
 use App\UseCases\Admin\Game\Sync\Service\GameDataFilterService;
+use App\UseCases\Admin\Game\Sync\Service\ImageSyncDataService;
 use App\UseCases\Admin\Game\Sync\Service\SupportedClubsService;
 use App\UseCases\Admin\Game\Sync\Transformer\GamePlayerTransformer;
 use App\UseCases\Admin\Game\Sync\Transformer\GameTransformer;
@@ -29,6 +31,7 @@ final readonly class SyncGameDetailAction
         private PlayerStatisticTransformer $playerStatisticTransformer,
         private SupportedClubsService $supportedClubService,
         private GameDataFilterService $gameDataFilterService,
+        private ImageSyncDataService $imageSyncDataService,
     ) {}
 
     /**
@@ -36,12 +39,11 @@ final readonly class SyncGameDetailAction
      * Game Player GamePlayer PlayerStatisticモデルを更新
      *
      * 一試合のみの詳細データを同期する
-     *
-     * @return array{players: int}
+     * データ保存後にGameDetailSyncedイベントを発火
      *
      * @throws RuntimeException 試合が完了していない場合
      */
-    public function execute(int $apiFixtureId): array
+    public function execute(int $apiFixtureId): void
     {
         $fixtureDetail = $this->repository->fetchFixtureDetail($apiFixtureId);
 
@@ -54,21 +56,20 @@ final readonly class SyncGameDetailAction
 
         $service = $this->gameDataFilterService->from($fixtureDetail);
 
-        return DB::transaction(function () use ($game, $service) {
+        DB::transaction(function () use ($game, $service) {
             $this->updateGame($game, $service);
-
-            $playersCount = $this->updatePlayers($game, $service);
-
-            $gamePlayersCount = $this->updateGamePlayers($game, $service);
-
-            $playerStatisticsCount = $this->updatePlayerStatistics($game, $service);
-
-            return [
-                'players' => $playersCount,
-                'game_players' => $gamePlayersCount,
-                'player_statistics' => $playerStatisticsCount,
-            ];
+            $this->updatePlayers($game, $service);
+            $this->updateGamePlayers($game, $service);
+            $this->updatePlayerStatistics($game, $service);
         });
+
+        $eventData = collect([
+            'teams'   => $this->imageSyncDataService->getTeamsWithoutImages(),
+            'leagues' => $this->imageSyncDataService->getLeaguesWithoutImages(),
+            'players' => $this->imageSyncDataService->getPlayersWithoutImages(),
+        ]);
+
+        GameDetailSynced::dispatch($eventData);
     }
 
     /**
@@ -94,12 +95,15 @@ final readonly class SyncGameDetailAction
 
     /**
      * 試合詳細の更新
-     *
-     * @return void
      */
-    private function updateGame(Game $game, GameDataFilterService $service)
+    private function updateGame(Game $game, GameDataFilterService $service): void
     {
-        $gameData = $this->gameTransformer->toUpdateData($game, $service);
+        $teamIdMapping = collect([
+            $game->homeTeam->api_team_id => $game->homeTeam->id,
+            $game->awayTeam->api_team_id => $game->awayTeam->id,
+        ]);
+
+        $gameData = $this->gameTransformer->toUpdateData($service, $teamIdMapping);
 
         $game->update($gameData);
     }
@@ -107,7 +111,7 @@ final readonly class SyncGameDetailAction
     /**
      * プレイヤーの更新
      */
-    private function updatePlayers(Game $game, GameDataFilterService $service): int
+    private function updatePlayers(Game $game, GameDataFilterService $service): void
     {
         $supportedPlayerIds = $service->getPlayedPlayerIds();
 
@@ -131,14 +135,12 @@ final readonly class SyncGameDetailAction
                 'number', 'image_path',
             ],
         );
-
-        return count($playersData);
     }
 
     /**
      * ゲームプレイヤーの更新
      */
-    private function updateGamePlayers(Game $game, GameDataFilterService $service): int
+    private function updateGamePlayers(Game $game, GameDataFilterService $service): void
     {
         $playerIdMapping = Player::query()
             ->whereIn('api_player_id', $service->getPlayedPlayerIds())
@@ -159,16 +161,13 @@ final readonly class SyncGameDetailAction
                 'assists', 'goals', 'api_rating', 'updated_at',
             ],
         );
-
-        return count($gamePlayersData);
     }
 
     /**
      * プレイヤー統計の更新
      */
-    private function updatePlayerStatistics(Game $game, GameDataFilterService $service): int
+    private function updatePlayerStatistics(Game $game, GameDataFilterService $service): void
     {
-
         $gamePlayerIdMapping = GamePlayer::query()
             ->where('game_id', $game->id)
             ->with('player:id,api_player_id')
@@ -190,7 +189,5 @@ final readonly class SyncGameDetailAction
                 'saves', 'goals_conceded',
             ],
         );
-
-        return count($playerStatisticsData);
     }
 }

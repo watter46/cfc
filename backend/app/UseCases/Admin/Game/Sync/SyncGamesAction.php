@@ -12,6 +12,7 @@ use App\Models\Team;
 use App\UseCases\Admin\Game\ApiFootballRepositoryInterface;
 use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\FixtureListDto;
 use App\UseCases\Admin\Game\Sync\Exceptions\EmptyApiResponseException;
+use App\UseCases\Admin\Game\Sync\Service\ImageSyncDataService;
 use App\UseCases\Admin\Game\Sync\Transformer\GameTransformer;
 use App\UseCases\Admin\Game\Sync\Transformer\LeagueTransformer;
 use App\UseCases\Admin\Game\Sync\Transformer\SeasonTransformer;
@@ -27,6 +28,7 @@ final readonly class SyncGamesAction
         private TeamTransformer $teamTransformer,
         private LeagueTransformer $leagueTransformer,
         private SeasonTransformer $seasonTransformer,
+        private ImageSyncDataService $imageSyncDataService,
     ) {}
 
     /**
@@ -36,16 +38,16 @@ final readonly class SyncGamesAction
     {
         $fixturesListDto = $this->apiFootballRepository->fetchFixtures($season);
 
-        // DB::transaction(function () use ($fixturesListDto) {
-        //     $this->updateSeason($fixturesListDto);
-        //     $this->updateLeagues($fixturesListDto);
-        //     $this->updateTeams($fixturesListDto);
-        //     $this->updateGames($fixturesListDto);
-        // });
+        DB::transaction(function () use ($fixturesListDto) {
+            $this->updateSeason($fixturesListDto);
+            $this->updateLeagues($fixturesListDto);
+            $this->updateTeams($fixturesListDto);
+            $this->updateGames($fixturesListDto);
+        });
 
         $eventData = collect([
-            'apiTeamIds'   => $fixturesListDto->apiTeamIds(),
-            'apiLeagueIds' => $fixturesListDto->apiLeagueIds(),
+            'teams'   => $this->imageSyncDataService->getTeamsWithoutImages(),
+            'leagues' => $this->imageSyncDataService->getLeaguesWithoutImages(),
         ]);
 
         GamesSynced::dispatch($eventData);

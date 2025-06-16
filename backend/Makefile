@@ -43,4 +43,4 @@ ide:
 	php artisan ide-helper:meta
 	php artisan ide-helper:models -N
 pint:
-	./vendor/bin/pint app
+	./vendor/bin/pint --config pint.json --test

@@ -253,5 +253,19 @@ final class MacroCollectionServiceProvider extends ServiceProvider
                 return $result;
             });
         });
+
+        /**
+         * コレクションの値をインクリメントするマクロメソッド
+         *
+         * 統計カウンター処理で頻繁に使用するインクリメント操作を
+         * より直感的で読みやすい形で実現します。
+         */
+        Collection::macro('increment', function (string $key, int $amount = 1) {
+            /** @var Collection $this */
+            $currentValue = $this->get($key, 0);
+            $this->put($key, $currentValue + $amount);
+
+            return $this;
+        });
     }
 }

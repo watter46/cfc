@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\UseCases\Admin\Game\Sync\Transformer;
 
-use App\Models\Game;
 use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\FixtureDetailDto;
 use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\FixtureDto;
 use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\FixtureListDto;
@@ -63,12 +62,13 @@ final class GameTransformer
     /**
      * SyncGameDetailAction用: GameモデルとFixtureDetailDtoから単体ゲームデータを構築
      *
+     *
      * @return array<string, mixed>
      */
-    public function toUpdateData(Game $game, GameDataFilterService $service): array
+    public function toUpdateData(GameDataFilterService $service, Collection $teamIdMapping): array
     {
         return [
-            'winner_team_id'     => $this->resolveWinnerTeamId($service->getFixture(), $game),
+            'winner_team_id'     => $this->resolveWinnerTeamId($service->getFixture(), $teamIdMapping),
             'score'              => $this->buildScoreJson($service->getFixture()),
             'is_end'             => true,
             'is_details_fetched' => true,
@@ -106,13 +106,8 @@ final class GameTransformer
     /**
      * 勝利team_idを取得する
      */
-    private function resolveWinnerTeamId(FixtureDto $dto, Game $game): ?int
+    private function resolveWinnerTeamId(FixtureDto $dto, Collection $teamIdMapping): ?int
     {
-        $teamIdMapping = collect([
-            $game->homeTeam->api_team_id => $game->homeTeam->id,
-            $game->awayTeam->api_team_id => $game->awayTeam->id,
-        ]);
-
         $winner = $dto->getWinnerTeam();
 
         if (! $winner) {

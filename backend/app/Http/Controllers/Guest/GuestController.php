@@ -20,17 +20,17 @@ final class GuestController extends ApiController
 
     public function dev(SyncGamesAction $syncGamesAction)
     {
-        $result = $syncGamesAction->execute(2024);
+        $syncGamesAction->execute(2024);
 
-        dd($result);
+        return response()->json(['message' => 'Games sync completed']);
     }
 
     public function find(SyncGameDetailAction $syncGameDetail)
     {
         $apiFixtureId = Game::first()->api_fixture_id;
 
-        $result = $syncGameDetail->execute($apiFixtureId);
+        $syncGameDetail->execute($apiFixtureId);
 
-        dd($result);
+        return response()->json(['message' => 'Game detail sync completed']);
     }
 }
