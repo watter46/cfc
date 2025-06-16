@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories\Images;
 
-class PlayerImageRepository extends AbstractImageRepository
+final class PlayerImageRepository extends AbstractImageRepository
 {
     public function getDirName(): string
     {

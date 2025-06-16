@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Models;
 
@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Player extends Model
+final class Player extends Model
 {
     use HasFactory;
 
@@ -27,12 +27,12 @@ class Player extends Model
         'position',
         'number',
         'api_player_id',
-        'nationality',
-        'birth_date',
-        'height',
-        'weight',
+        'flash_id',
+        'flash_image_id',
         'image_path',
+        'is_active',
         'is_fetched',
+        'has_image',
     ];
 
     /**
@@ -43,8 +43,9 @@ class Player extends Model
     protected function casts(): array
     {
         return [
-            'birth_date' => 'date',
+            'is_active'  => 'boolean',
             'is_fetched' => 'boolean',
+            'has_image'  => 'boolean',
         ];
     }
 
@@ -97,5 +98,29 @@ class Player extends Model
     public function gamePlayers(): HasMany
     {
         return $this->hasMany(GamePlayer::class);
+    }
+
+    /**
+     * 選手の画像がストレージに存在するかを確認
+     */
+    public function hasStoredImage(): bool
+    {
+        return $this->has_image && ! empty($this->image_path);
+    }
+
+    /**
+     * FlashLiveSports APIから画像を取得可能かを確認
+     */
+    public function canFetchFlashImage(): bool
+    {
+        return ! empty($this->flash_image_id);
+    }
+
+    /**
+     * FlashLiveSports APIの選手IDが設定されているかを確認
+     */
+    public function hasFlashId(): bool
+    {
+        return ! empty($this->flash_id);
     }
 }

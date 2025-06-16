@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Database\Seeders\test\ten_game;
 
@@ -8,12 +8,9 @@ use App\Repositories\Json\TenGamesJsonRepository;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class PlayerSeeder extends Seeder
+final class PlayerSeeder extends Seeder
 {
-    public function __construct(private TenGamesJsonRepository $repository)
-    {
-
-    }
+    public function __construct(private TenGamesJsonRepository $repository) {}
 
     /**
      * Run the database seeds.

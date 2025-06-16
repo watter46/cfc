@@ -18,6 +18,7 @@ return new class () extends Migration {
             $table->string('name')->comment('大会名');
             $table->string('type')->comment('大会タイプ');
             $table->string('logo_path')->nullable()->comment('ロゴパス');
+            $table->boolean('has_image')->default(false)->comment('画像が設定されているか判定');
             $table->timestamps();
         });
     }

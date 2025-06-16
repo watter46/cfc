@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Http\Controllers\User;
 
@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\User\Auth\LoginRequest;
 use App\Http\Requests\User\Auth\RegisterRequest;
 use App\Models\User;
+use Exception;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-class AuthController extends Controller
+final class AuthController extends Controller
 {
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -24,9 +25,9 @@ class AuthController extends Controller
             $validated = $request->validated();
 
             $user = User::create([
-                'ulid' => Str::ulid()->toBase32(),
-                'name' => $validated['name'],
-                'email' => $validated['email'],
+                'ulid'     => Str::ulid()->toBase32(),
+                'name'     => $validated['name'],
+                'email'    => $validated['email'],
                 'password' => Hash::make($validated['password']),
             ]);
 
@@ -34,13 +35,13 @@ class AuthController extends Controller
 
             return response()->json([
                 'message' => 'Registration successful!',
-                'data' => [
+                'data'    => [
                     'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
+                        'id'    => $user->id,
+                        'name'  => $user->name,
                         'email' => $user->email,
                     ],
-                    'token' => $token,
+                    'token'      => $token,
                     'token_type' => 'Bearer',
                 ],
             ], 201);
@@ -49,9 +50,9 @@ class AuthController extends Controller
 
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $e->errors(),
+                'errors'  => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Unexpected error during registration', ['error' => $e->getMessage()]);
 
             return response()->json([
@@ -75,13 +76,13 @@ class AuthController extends Controller
 
             return response()->json([
                 'message' => 'Authentication successful.',
-                'data' => [
+                'data'    => [
                     'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
+                        'id'    => $user->id,
+                        'name'  => $user->name,
                         'email' => $user->email,
                     ],
-                    'token' => $token,
+                    'token'      => $token,
                     'token_type' => 'Bearer',
                 ],
             ]);
@@ -91,7 +92,7 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Authentication failed.',
             ], 401);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Unexpected error during login', ['error' => $e->getMessage()]);
 
             return response()->json([
@@ -117,7 +118,7 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Successfully logged out.',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to logout', ['error' => $e->getMessage()]);
 
             return response()->json([
@@ -139,12 +140,12 @@ class AuthController extends Controller
 
             return new JsonResponse([
                 'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
+                    'id'    => $user->id,
+                    'name'  => $user->name,
                     'email' => $user->email,
                 ],
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to fetch user data', ['error' => $e->getMessage()]);
 
             return response()->json([
@@ -164,7 +165,7 @@ class AuthController extends Controller
             return response()->json([
                 'data' => $tokens,
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to fetch tokens', ['error' => $e->getMessage()]);
 
             return response()->json([
@@ -190,7 +191,7 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Token revoked successfully.',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to revoke token', ['error' => $e->getMessage()]);
 
             return response()->json([
@@ -209,10 +210,10 @@ class AuthController extends Controller
             $deletedCount = $request->user()->tokens()->where('id', '!=', $currentTokenId)->delete();
 
             return response()->json([
-                'message' => "Successfully revoked {$deletedCount} tokens.",
+                'message'       => "Successfully revoked {$deletedCount} tokens.",
                 'revoked_count' => $deletedCount,
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to revoke all tokens', ['error' => $e->getMessage()]);
 
             return response()->json([

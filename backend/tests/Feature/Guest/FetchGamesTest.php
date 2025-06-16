@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Tests\Feature\Guest;
 
@@ -8,7 +8,7 @@ use Database\Seeders\test\ten_game\GamePlayerSeeder;
 use Database\Seeders\test\ten_game\GameSeeder;
 use Database\Seeders\test\ten_game\PlayerSeeder;
 
-class FetchGamesTest extends GuestTestCase
+final class FetchGamesTest extends GuestTestCase
 {
     protected $seeder = [
         GameSeeder::class,

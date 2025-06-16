@@ -17,6 +17,7 @@ return new class () extends Migration {
             $table->integer('api_team_id')->unique()->comment('APIチームID');
             $table->string('name')->comment('チーム名');
             $table->string('logo_path')->nullable()->comment('チームロゴパス');
+            $table->boolean('has_image')->default(false)->comment('画像が設定されているか判定');
             $table->timestamps();
         });
     }

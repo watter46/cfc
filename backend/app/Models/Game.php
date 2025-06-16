@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Models;
 
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
-class Game extends Model
+final class Game extends Model
 {
     use HasFactory;
 
@@ -29,8 +29,8 @@ class Game extends Model
     protected function casts(): array
     {
         return [
-            'score' => AsCollection::class,
-            'is_end' => 'boolean',
+            'score'              => AsCollection::class,
+            'is_end'             => 'boolean',
             'is_details_fetched' => 'boolean',
         ];
     }

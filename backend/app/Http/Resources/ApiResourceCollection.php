@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Http\Resources;
 
@@ -50,7 +50,7 @@ class ApiResourceCollection extends ResourceCollection
         $response = [
             'success' => $this->success,
             'message' => $this->message,
-            'data' => $this->collection,
+            'data'    => $this->collection,
         ];
 
         if ($this->meta) {
@@ -64,11 +64,11 @@ class ApiResourceCollection extends ResourceCollection
         // ページネーション情報がある場合は追加
         if ($this->resource->resource instanceof \Illuminate\Pagination\AbstractPaginator) {
             $response['meta']['pagination'] = [
-                'total' => $this->resource->total(),
-                'count' => $this->resource->count(),
-                'per_page' => $this->resource->perPage(),
+                'total'        => $this->resource->total(),
+                'count'        => $this->resource->count(),
+                'per_page'     => $this->resource->perPage(),
                 'current_page' => $this->resource->currentPage(),
-                'total_pages' => $this->resource->lastPage(),
+                'total_pages'  => $this->resource->lastPage(),
             ];
         }
 

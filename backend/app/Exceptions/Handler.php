@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Exceptions;
 
@@ -13,12 +13,12 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
-class Handler extends ExceptionHandler
+final class Handler extends ExceptionHandler
 {
     /**
      * A list of exception types with their corresponding custom log levels.
      *
-     * @var array<class-string<\Throwable>, \Psr\Log\LogLevel::*>
+     * @var array<class-string<Throwable>, \Psr\Log\LogLevel::*>
      */
     protected $levels = [
         //
@@ -27,7 +27,7 @@ class Handler extends ExceptionHandler
     /**
      * A list of the exception types that are not reported.
      *
-     * @var array<int, class-string<\Throwable>>
+     * @var array<int, class-string<Throwable>>
      */
     protected $dontReport = [
         //
@@ -56,10 +56,6 @@ class Handler extends ExceptionHandler
 
     /**
      * APIリクエストに対する例外レンダリング
-     *
-     * @param  Request      $request
-     * @param  Throwable    $e
-     * @return JsonResponse
      */
     protected function renderApiException(Request $request, Throwable $e): JsonResponse
     {
@@ -96,8 +92,7 @@ class Handler extends ExceptionHandler
     /**
      * Render an exception into an HTTP response.
      *
-     * @param  Request                                    $request
-     * @param  Throwable                                  $e
+     * @param  Request  $request
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @throws Throwable

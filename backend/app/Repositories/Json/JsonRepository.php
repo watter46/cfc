@@ -1,12 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Repositories\Json;
 
 class JsonRepository
 {
     private const EXTENSION = '.json';
+
     private const BASE_DIR = 'database/data';
 
     private string $dirName;
@@ -18,11 +19,21 @@ class JsonRepository
         $this->dirName = $dirName;
         $this->fileName = $fileName;
 
+        if (! $this->exist()) {
+            return null;
+        }
+
         return json_decode(file_get_contents($this->path()), true);
     }
 
     public function getCollection(string $dirName, int|string $fileName)
     {
+        $contents = $this->get($dirName, $fileName);
+
+        if ($contents === null) {
+            return collect();
+        }
+
         return collect($this->get($dirName, $fileName))->deepCollect();
     }
 
@@ -43,12 +54,12 @@ class JsonRepository
 
     private function path(): string
     {
-        return base_path($this->getDirPath() . '/' . $this->fileName . self::EXTENSION);
+        return base_path($this->getDirPath().'/'.$this->fileName.self::EXTENSION);
     }
 
     private function getDirPath(): string
     {
-        return self::BASE_DIR . '/' . $this->dirName;
+        return self::BASE_DIR.'/'.$this->dirName;
     }
 
     private function ensureDirectoryExists()

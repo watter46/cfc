@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Exceptions\Api;
 
@@ -22,9 +22,9 @@ class ApiException extends Exception
     /**
      * コンストラクタ
      *
-     * @param string     $message    エラーメッセージ
-     * @param int        $statusCode HTTPステータスコード
-     * @param array|null $errors     エラー詳細
+     * @param  string  $message  エラーメッセージ
+     * @param  int  $statusCode  HTTPステータスコード
+     * @param  array|null  $errors  エラー詳細
      */
     public function __construct(string $message = 'Server Error', ?int $statusCode = null, ?array $errors = null)
     {
@@ -39,8 +39,6 @@ class ApiException extends Exception
 
     /**
      * HTTPステータスコードを取得
-     *
-     * @return int
      */
     public function getStatusCode(): int
     {
@@ -49,8 +47,6 @@ class ApiException extends Exception
 
     /**
      * エラー詳細を取得
-     *
-     * @return array|null
      */
     public function getErrors(): ?array
     {
@@ -59,8 +55,6 @@ class ApiException extends Exception
 
     /**
      * JSONレスポンスを生成
-     *
-     * @return JsonResponse
      */
     public function render(): JsonResponse
     {

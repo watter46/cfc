@@ -1,6 +1,8 @@
 volumes:
   db-store:
   node_modules:
+  cfc_storage:
+    external: true
 
 services:
   frontend:
@@ -26,6 +28,7 @@ services:
       target: ${ENV}
     volumes:
       - ./backend:/var/www/backend
+      - cfc_storage:/var/www/backend/storage/app/public
     depends_on:
       - db
 
@@ -43,7 +46,7 @@ services:
     volumes:
       - ./backend:/var/www/backend
     depends_on:
-      - frontend
+      # - frontend
       - backend
 
   db:

@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Tests\Feature\Guest;
 
@@ -17,7 +17,7 @@ abstract class GuestTestCase extends BaseTestCase
 
     protected $seeder;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 

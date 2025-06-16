@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Models;
 
@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Team extends Model
+final class Team extends Model
 {
     use HasFactory;
 
@@ -21,7 +21,20 @@ class Team extends Model
         'api_team_id',
         'name',
         'logo_path',
+        'has_image',
     ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'has_image' => 'boolean',
+        ];
+    }
 
     /**
      * チームに所属する選手を取得

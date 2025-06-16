@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Exceptions\Api;
 
 use Illuminate\Validation\ValidationException as IlluminateValidationException;
 
-class ValidationException extends ApiException
+final class ValidationException extends ApiException
 {
     /**
      * コンストラクタ
      *
-     * @param IlluminateValidationException $exception バリデーション例外
+     * @param  IlluminateValidationException  $exception  バリデーション例外
      */
     public function __construct(IlluminateValidationException $exception)
     {
         parent::__construct(
             'Validation Failed',
             422,
-            $exception->errors()
+            $exception->errors(),
         );
     }
 }

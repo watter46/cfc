@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
-class AuthControllerTest extends TestCase
+final class AuthControllerTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -20,9 +20,9 @@ class AuthControllerTest extends TestCase
     public function test_ユーザーが登録できる(): void
     {
         $userData = [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'password123',
+            'name'                  => 'Test User',
+            'email'                 => 'test@example.com',
+            'password'              => 'password123',
             'password_confirmation' => 'password123',
         ];
 
@@ -43,9 +43,9 @@ class AuthControllerTest extends TestCase
             ])
             ->assertJson([
                 'message' => 'Registration successful!',
-                'data' => [
+                'data'    => [
                     'user' => [
-                        'name' => 'Test User',
+                        'name'  => 'Test User',
                         'email' => 'test@example.com',
                     ],
                     'token_type' => 'Bearer',
@@ -53,7 +53,7 @@ class AuthControllerTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('users', [
-            'name' => 'Test User',
+            'name'  => 'Test User',
             'email' => 'test@example.com',
         ]);
 
@@ -68,12 +68,12 @@ class AuthControllerTest extends TestCase
     public function test_ユーザーがログインできる(): void
     {
         $user = User::factory()->create([
-            'email' => 'test@example.com',
+            'email'    => 'test@example.com',
             'password' => Hash::make('password123'),
         ]);
 
         $loginData = [
-            'email' => 'test@example.com',
+            'email'    => 'test@example.com',
             'password' => 'password123',
         ];
 
@@ -94,10 +94,10 @@ class AuthControllerTest extends TestCase
             ])
             ->assertJson([
                 'message' => 'Authentication successful.',
-                'data' => [
+                'data'    => [
                     'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
+                        'id'    => $user->id,
+                        'name'  => $user->name,
                         'email' => $user->email,
                     ],
                     'token_type' => 'Bearer',
@@ -114,12 +114,12 @@ class AuthControllerTest extends TestCase
     public function test_無効な認証情報でログインできない(): void
     {
         User::factory()->create([
-            'email' => 'test@example.com',
+            'email'    => 'test@example.com',
             'password' => Hash::make('password123'),
         ]);
 
         $loginData = [
-            'email' => 'test@example.com',
+            'email'    => 'test@example.com',
             'password' => 'wrongpassword',
         ];
 
@@ -151,8 +151,8 @@ class AuthControllerTest extends TestCase
             ])
             ->assertJson([
                 'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
+                    'id'    => $user->id,
+                    'name'  => $user->name,
                     'email' => $user->email,
                 ],
             ]);
@@ -176,7 +176,7 @@ class AuthControllerTest extends TestCase
         $user = User::factory()->create();
         $token = $user->createToken('test_token');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token->plainTextToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token->plainTextToken)
             ->postJson('/api/auth/logout');
 
         $response->assertStatus(200)
@@ -249,7 +249,7 @@ class AuthControllerTest extends TestCase
         $user->createToken('token2');
         $currentToken = $user->createToken('current_token');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $currentToken->plainTextToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$currentToken->plainTextToken)
             ->postJson('/api/auth/tokens/revoke-all');
 
         $response->assertStatus(200)
@@ -272,8 +272,8 @@ class AuthControllerTest extends TestCase
     public function test_登録時のバリデーションエラー(): void
     {
         $invalidData = [
-            'name' => '',
-            'email' => 'invalid-email',
+            'name'     => '',
+            'email'    => 'invalid-email',
             'password' => '123', // 短すぎる
         ];
 
@@ -292,7 +292,7 @@ class AuthControllerTest extends TestCase
     public function test_ログイン時のバリデーションエラー(): void
     {
         $invalidData = [
-            'email' => 'invalid-email',
+            'email'    => 'invalid-email',
             'password' => '',
         ];
 

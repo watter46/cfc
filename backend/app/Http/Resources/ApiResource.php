@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Http\Resources;
 
@@ -50,7 +50,7 @@ class ApiResource extends JsonResource
         $response = [
             'success' => $this->success,
             'message' => $this->message,
-            'data' => parent::toArray($request),
+            'data'    => parent::toArray($request),
         ];
 
         if ($this->meta) {

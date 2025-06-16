@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\UseCases\Guest;
 
@@ -9,19 +9,14 @@ use App\Models\Season;
 use App\UseCases\Admin\Game\Services\Rateable\RateableGamePolicy;
 use Illuminate\Support\Collection;
 
-class FetchLatestFinishedGames
+final class FetchLatestFinishedGames
 {
     private const LATEST_GAMES_LIMIT = 5;
 
     /**
      * FetchLatestGames constructor.
-     *
-     * @param RateableGamePolicy $policy
      */
-    public function __construct(private RateableGamePolicy $policy)
-    {
-
-    }
+    public function __construct(private RateableGamePolicy $policy) {}
 
     /**
      * Fetch the latest 5 finished games for the current season.

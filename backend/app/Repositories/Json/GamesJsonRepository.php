@@ -1,10 +1,10 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Repositories\Json;
 
-class GamesJsonRepository extends JsonRepository
+final class GamesJsonRepository extends JsonRepository
 {
     private const JSON_KEYS = ['score', 'teams', 'league'];
 

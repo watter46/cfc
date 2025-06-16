@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Models;
 
@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class League extends Model
+final class League extends Model
 {
     use HasFactory;
 
@@ -22,7 +22,20 @@ class League extends Model
         'name',
         'type',
         'logo_path',
+        'has_image',
     ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'has_image' => 'boolean',
+        ];
+    }
 
     /**
      * 大会に関連する試合を取得
