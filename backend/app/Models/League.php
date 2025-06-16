@@ -22,7 +22,20 @@ final class League extends Model
         'name',
         'type',
         'logo_path',
+        'has_image',
     ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'has_image' => 'boolean',
+        ];
+    }
 
     /**
      * 大会に関連する試合を取得
