@@ -19,11 +19,21 @@ class JsonRepository
         $this->dirName = $dirName;
         $this->fileName = $fileName;
 
+        if (! $this->exist()) {
+            return null;
+        }
+
         return json_decode(file_get_contents($this->path()), true);
     }
 
     public function getCollection(string $dirName, int|string $fileName)
     {
+        $contents = $this->get($dirName, $fileName);
+
+        if ($contents === null) {
+            return collect();
+        }
+
         return collect($this->get($dirName, $fileName))->deepCollect();
     }
 
