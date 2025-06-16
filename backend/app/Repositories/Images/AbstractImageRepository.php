@@ -55,7 +55,7 @@ abstract class AbstractImageRepository
         return Storage::disk(self::DISK)->exists($this->path());
     }
 
-    public function save(int|string $fileName, string $binaryData)
+    public function save(int|string $fileName, string $binaryData): bool
     {
         $this->setFileName($fileName);
 
@@ -63,7 +63,7 @@ abstract class AbstractImageRepository
 
         $webpBinaryString = $this->manager->read($binaryData)->toWebp()->toString();
 
-        Storage::disk(self::DISK)->put($this->path(), $webpBinaryString);
+        return Storage::disk(self::DISK)->put($this->path(), $webpBinaryString);
     }
 
     private function path(): string
@@ -74,7 +74,7 @@ abstract class AbstractImageRepository
     private function storagePath(): string
     {
         return self::LINK.'/'.$this->getDirPath().'/'.$this->fileName.self::EXTENSION;
-    } 
+    }
 
     private function getDirPath(): string
     {

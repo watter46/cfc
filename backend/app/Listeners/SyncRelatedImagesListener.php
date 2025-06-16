@@ -7,6 +7,7 @@ namespace App\Listeners;
 use App\Events\GameDetailSynced;
 use App\Events\GamesSynced;
 use App\Jobs\SyncLeagueImageJob;
+use App\Jobs\SyncPlayerImageJob;
 use App\Jobs\SyncTeamImageJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
@@ -26,20 +27,29 @@ class SyncRelatedImagesListener implements ShouldQueue
     public function handle(GamesSynced|GameDetailSynced $event): void
     {
         if ($event instanceof GamesSynced) {
-            $this->executeLagueImageSync($event->getApiLeagueIds());
-            $this->executeTeamImageSync($event->getApiTeamIds());
+            $this->executeLagueImageSync($event->getLeagues());
+            $this->executeTeamImageSync($event->getTeams());
 
             return;
         }
+
+        $this->executeLagueImageSync($event->getLeagues());
+        $this->executeTeamImageSync($event->getTeams());
+        $this->executePlayerImageSync($event->getPlayers());
     }
 
-    private function executeLagueImageSync(Collection $apiLeagueIds): void
+    private function executeLagueImageSync(Collection $leagues): void
     {
-        Queue::push(new SyncLeagueImageJob($apiLeagueIds));
+        Queue::push(new SyncLeagueImageJob($leagues));
     }
 
-    private function executeTeamImageSync(Collection $apiTeamIds): void
+    private function executeTeamImageSync(Collection $teams): void
     {
-        Queue::push(new SyncTeamImageJob($apiTeamIds));
+        Queue::push(new SyncTeamImageJob($teams));
+    }
+
+    private function executePlayerImageSync(Collection $players): void
+    {
+        Queue::push(new SyncPlayerImageJob($players));
     }
 }
