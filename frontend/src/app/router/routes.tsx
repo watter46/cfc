@@ -5,8 +5,8 @@ import { ProtectedRoute, AuthGuard } from "./ProtectedRoute";
 import Home from "../../pages/guest/Home";
 import LoginPage from "../../pages/auth/login";
 import RegisterPage from "../../pages/auth/register";
-import AuthApiTestPage from "../../pages/dev/api-test";
-import Api from "../../pages/dev/Api";
+// import AuthApiTestPage from "../../pages/dev/api-test";
+// import Api from "../../pages/dev/Api";
 
 /**
  * アプリケーションのルート定義
@@ -20,16 +20,16 @@ export const routes = [
   },
 
   // 開発・テスト用ルート
-  {
-    path: "/dev/api",
-    element: <Api />,
-    public: true,
-  },
-  {
-    path: "/dev/auth/register",
-    element: <AuthApiTestPage />,
-    public: true,
-  },
+  // {
+  //   path: "/dev/api",
+  //   element: <Api />,
+  //   public: true,
+  // },
+  // {
+  //   path: "/dev/auth/register",
+  //   element: <AuthApiTestPage />,
+  //   public: true,
+  // },
 
   // 認証関連ルート（ログイン済みの場合はリダイレクト）
   {

@@ -103,6 +103,19 @@
   }
 }
 
+/* カードヘッダー用の長い間隔のアニメーション */
+@keyframes slow-pulse-glow {
+  0%,
+  100% {
+    opacity: 0.3;
+    filter: brightness(0.8);
+  }
+  50% {
+    opacity: 0.6;
+    filter: brightness(1.2);
+  }
+}
+
 @keyframes glow {
   0% {
     box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
@@ -178,8 +191,20 @@
 
 /* Player position marker */
 .player-marker {
-  @apply absolute w-12 h-12 rounded-full bg-space-800/90 flex items-center justify-center 
+  @apply absolute w-12 h-12 rounded-full bg-space-800/90 flex items-center justify-center
          transform transition-all duration-300 cursor-pointer border-2 border-neon-blue
          hover:scale-110 z-10;
   box-shadow: var(--shadow-neon-blue);
+}
+
+@layer utilities {
+  /* 長い間隔の発光アニメーション */
+  .animate-slow-pulse-glow {
+    animation: slow-pulse-glow 4s ease-in-out infinite;
+  }
+
+  /* 遅いpulseアニメーション */
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }

@@ -25,21 +25,46 @@ export const Position = {
 export type Position = (typeof Position)[keyof typeof Position];
 
 export interface Team {
-  id: string;
+  id: number;
   name: string;
-  logo?: string;
-  players: Player[];
+  logo_path?: string;
+  players?: Player[];
 }
 
+/**
+ * 試合のスコア情報
+ */
+export interface Score {
+  away: number;
+  home: number;
+  penalty: {
+    away: number;
+    home: number;
+  };
+  fulltime: {
+    away: number;
+    home: number;
+  };
+  halftime: {
+    away: number;
+    home: number;
+  };
+  extratime: {
+    away: number;
+    home: number;
+  };
+}
+
+/**
+ * APIから取得される試合データの型定義
+ * バックエンドのAPIレスポンスと一致するように設計
+ */
 export interface Match {
-  id: string;
-  homeTeam: Team;
-  awayTeam: Team;
-  date: string; // Laravel側からフォーマット済みの日付文字列
-  score?: string; // Laravel側からのスコア文字列（例: "2-1"）
-  homeScore?: number;
-  awayScore?: number;
-  winnerTeamId?: string; // 勝利チームのID
+  date: string; // フォーマット: "MM/DD"
+  score: Score; // 終了した試合のみなので常にnon-null
+  home: Team;
+  away: Team;
+  WinnerTeamId: number | null; // 勝利チームのID（引き分けの場合はnull）
   isRateable: boolean; // 評価可能かどうか
 }
 

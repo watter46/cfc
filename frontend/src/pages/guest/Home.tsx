@@ -2,13 +2,36 @@ import React from "react";
 import { ArrowRight, Star, Trophy, Share2 } from "lucide-react";
 import MainLayout from "@/shared/components/layout/MainLayout.tsx";
 import PublicMatchCard from "@/features/matches/components/guest/PublicMatchCard.tsx";
-import { featuredMatches } from "@/features/matches/data/MatchList.ts";
+import { useRecentMatches } from "@/features/matches/hooks/useMatches.ts";
 import type { Match } from "@/shared/types/index.ts";
 
-// 将来のAPI統合用:
-// import { useMatches } from "@/features/matches/hooks/useMatches.ts";
+/**
+ * ローディングスピナーコンポーネント
+ */
+function LoadingSpinner() {
+  return (
+    <div className="flex justify-center items-center py-8">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-blue"></div>
+    </div>
+  );
+}
+
+/**
+ * エラー表示コンポーネント
+ */
+function ErrorMessage({ error }: { error: Error }) {
+  return (
+    <div className="text-center py-8">
+      <p className="text-red-400 mb-4">試合データの読み込みに失敗しました</p>
+      <p className="text-gray-400 text-sm">{error.message}</p>
+    </div>
+  );
+}
 
 const GuestHomePage: React.FC = () => {
+  // 最新の5試合を取得
+  const { data: recentMatches, isLoading, error } = useRecentMatches(5);
+
   return (
     <MainLayout>
       {/* Hero Section */}
@@ -66,9 +89,26 @@ const GuestHomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-            {featuredMatches.map((match: Match) => (
-              <PublicMatchCard key={match.id} match={match} />
-            ))}
+            {isLoading ? (
+              <div className="col-span-full">
+                <LoadingSpinner />
+              </div>
+            ) : error ? (
+              <div className="col-span-full">
+                <ErrorMessage error={error} />
+              </div>
+            ) : recentMatches && recentMatches.length > 0 ? (
+              recentMatches.map((match: Match, index: number) => (
+                <PublicMatchCard
+                  key={`${match.home.id}-${match.away.id}-${match.date}-${index}`}
+                  match={match}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-400">試合データがありません</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

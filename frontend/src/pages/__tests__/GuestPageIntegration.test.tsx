@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { BrowserRouter } from "react-router-dom";
 import GuestHomePage from "@/pages/guest/Home";
-import { AuthProviderWithQuery } from "@/features/auth/contexts/AuthProviderWithQuery";
+import { AuthProvider } from "@/features/auth/contexts/AuthContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Create a wrapper component for tests
@@ -19,9 +19,9 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProviderWithQuery>
+      <AuthProvider>
         <BrowserRouter>{children}</BrowserRouter>
-      </AuthProviderWithQuery>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
@@ -79,39 +79,38 @@ describe("Guest Page Integration Tests", () => {
   });
 
   describe("Backend Data Flow", () => {
-    it("imports and uses featuredMatches from MatchList", async () => {
-      // このテストは、実際のfeaturedMatchesインポートが動作することを確認
-      const MatchListModule = await import(
-        "../../features/matches/data/MatchList.ts"
+    it("imports and uses mockMatchesData from mockData", async () => {
+      // このテストは、実際のmockMatchesDataインポートが動作することを確認
+      const MockDataModule = await import(
+        "../../features/matches/data/mockData.ts"
       );
-      const { featuredMatches } = MatchListModule;
+      const { mockMatchesData } = MockDataModule;
 
-      expect(featuredMatches).toBeDefined();
-      expect(Array.isArray(featuredMatches)).toBe(true);
-      expect(featuredMatches.length).toBeGreaterThan(0);
+      expect(mockMatchesData).toBeDefined();
+      expect(Array.isArray(mockMatchesData)).toBe(true);
+      expect(mockMatchesData.length).toBeGreaterThan(0);
     });
 
-    it("featuredMatches contains valid backend structure", async () => {
-      const MatchListModule = await import(
-        "../../features/matches/data/MatchList.ts"
+    it("mockMatchesData contains valid backend structure", async () => {
+      const MockDataModule = await import(
+        "../../features/matches/data/mockData.ts"
       );
-      const { featuredMatches } = MatchListModule;
+      const { mockMatchesData } = MockDataModule;
 
-      featuredMatches.forEach((match: unknown) => {
+      mockMatchesData.forEach((match: unknown) => {
         const typedMatch = match as {
           id: string;
-          homeTeam: { id: string; name: string };
-          awayTeam: { id: string; name: string };
+          home: { id: number; name: string };
+          away: { id: number; name: string };
           isRateable: boolean;
         };
         // バックエンドデータの構造確認
-        expect(typedMatch.id).toBeDefined();
-        expect(typedMatch.homeTeam).toBeDefined();
-        expect(typedMatch.awayTeam).toBeDefined();
-        expect(typedMatch.homeTeam.id).toBeDefined();
-        expect(typedMatch.awayTeam.id).toBeDefined();
-        expect(typedMatch.homeTeam.name).toBeDefined();
-        expect(typedMatch.awayTeam.name).toBeDefined();
+        expect(typedMatch.home).toBeDefined();
+        expect(typedMatch.away).toBeDefined();
+        expect(typedMatch.home.id).toBeDefined();
+        expect(typedMatch.away.id).toBeDefined();
+        expect(typedMatch.home.name).toBeDefined();
+        expect(typedMatch.away.name).toBeDefined();
         expect(typeof typedMatch.isRateable).toBe("boolean");
       });
     });

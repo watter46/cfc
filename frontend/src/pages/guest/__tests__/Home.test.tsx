@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import Home from "@/pages/guest/Home";
-import { AuthProviderWithQuery } from "@/features/auth/contexts/AuthProviderWithQuery";
+import { AuthProvider } from "@/features/auth/contexts/AuthContext";
 
 // React Routerのモック
 vi.mock("react-router-dom", async () => {
@@ -42,7 +42,7 @@ const GuestTestWrapper: React.FC<{ children: React.ReactNode }> = ({
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthProviderWithQuery>{children}</AuthProviderWithQuery>
+        <AuthProvider>{children}</AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );
