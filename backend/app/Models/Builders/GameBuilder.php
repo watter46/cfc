@@ -14,6 +14,11 @@ final class GameBuilder extends Builder
         return $this->where('is_end', true);
     }
 
+    public function isDetailsFetched()
+    {
+        return $this->where('is_details_fetched', true);
+    }
+
     /**
      * リーグIDでフィルタリングする
      */

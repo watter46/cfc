@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace App\UseCases\Admin\Game\Sync\Transformer;
 
+use App\Repositories\Images\LeagueImageRepository;
 use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\Components\LeagueDto;
 use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\FixtureListDto;
 
 final class LeagueTransformer
 {
+    public function __construct(private LeagueImageRepository $leagueImage)
+    {
+        //
+    }
+    
     /**
-     * FixtureListDtoからUpsert用データ配列を一括構築（重複除去済み）
+     * FixtureListDtoからUpsert用データ配列を一括構築
      *
      * @return array<array>
      */
@@ -23,7 +29,7 @@ final class LeagueTransformer
                 'api_league_id' => $dto->id,
                 'name'          => $dto->name,
                 'type'          => 'league',
-                'logo_path'     => empty($dto->logo) ? null : $dto->logo,
+                'logo_path'     => $this->leagueImage->getFullPath($dto->id),
                 'updated_at'    => now(),
             ])
             ->values()

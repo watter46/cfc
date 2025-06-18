@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace App\UseCases\Admin\Game\Sync\Transformer;
 
+use App\Repositories\Images\TeamImageRepository;
 use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\Components\TeamDto;
 use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\FixtureListDto;
 
 final class TeamTransformer
 {
+    public function __construct(private readonly TeamImageRepository $teamImage)
+    {
+        
+    }
+    
     /**
-     * FixtureListDtoからUpsert用データ配列に一括構築（重複除去済み）
+     * FixtureListDtoからUpsert用データ配列に一括構築
      *
      * @return array<array>
      */
@@ -22,7 +28,7 @@ final class TeamTransformer
             ->map(fn (TeamDto $dto) => [
                 'api_team_id' => $dto->id,
                 'name'        => $dto->name,
-                'logo_path'   => empty($dto->logo) ? null : $dto->logo,
+                'logo_path'   => $this->teamImage->getFullPath($dto->id),
                 'updated_at'  => now(),
             ])
             ->values()
