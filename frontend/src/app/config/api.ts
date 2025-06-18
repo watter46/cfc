@@ -7,7 +7,7 @@
  * API基本設定
  */
 export const API_CONFIG = {
-  baseURL: "/api",
+  baseURL: "http://localhost:8000",
   timeout: 10000,
   withCredentials: true,
 } as const;
@@ -25,6 +25,11 @@ export const API_ENDPOINTS = {
     forgotPassword: "/auth/forgot-password",
     resetPassword: "/auth/reset-password",
     csrf: "/csrf-token",
+  },
+
+  // 試合関連（Guest用）
+  matches: {
+    list: "http://localhost:8000/api", // Guest用のデータエンドポイント
   },
 } as const;
 
