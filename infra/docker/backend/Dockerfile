@@ -29,6 +29,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libwebp-dev \
+    libgd-dev \
     git \
     vim \
     unzip \
@@ -36,10 +40,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     && locale-gen en_US.UTF-8 \
     && localedef -f UTF-8 -i en_US en_US.UTF-8 \
+    && docker-php-ext-configure gd \
+        --with-jpeg \
+        --with-webp \
     && docker-php-ext-install \
-    pdo_mysql \
-    zip \
-    bcmath
+        pdo_mysql \
+        zip \
+        bcmath \
+        gd \
+        exif
 
 COPY ./infra/docker/backend/php.local.ini /usr/local/etc/php/php.ini
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer

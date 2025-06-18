@@ -27,9 +27,13 @@ final class GuestController extends ApiController
 
     public function find(SyncGameDetailAction $syncGameDetail)
     {
-        $apiFixtureId = Game::first()->api_fixture_id;
+        Game::isEnd()->isDetailsFetched()->pluck('api_fixture_id')->each(function ($apiFixtureId) use ($syncGameDetail) {
+            $syncGameDetail->execute($apiFixtureId);
+        });
+        
+        // $apiFixtureId = Game::first()->api_fixture_id;
 
-        $syncGameDetail->execute($apiFixtureId);
+        // $syncGameDetail->execute($apiFixtureId);
 
         return response()->json(['message' => 'Game detail sync completed']);
     }

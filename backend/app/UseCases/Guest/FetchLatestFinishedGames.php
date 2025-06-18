@@ -6,7 +6,7 @@ namespace App\UseCases\Guest;
 
 use App\Models\Game;
 use App\Models\Season;
-use App\UseCases\Admin\Game\Services\Rateable\RateableGamePolicy;
+use App\UseCases\Guest\RateableService;
 use Illuminate\Support\Collection;
 
 final class FetchLatestFinishedGames
@@ -16,10 +16,10 @@ final class FetchLatestFinishedGames
     /**
      * FetchLatestGames constructor.
      */
-    public function __construct(private RateableGamePolicy $policy) {}
+    public function __construct(private RateableService $rateable) {}
 
     /**
-     * Fetch the latest 5 finished games for the current season.
+     * Fetch the latest 3 finished games for the current season.
      *
      * @return Collection<Game>
      */
@@ -48,7 +48,7 @@ final class FetchLatestFinishedGames
             ->firstOrFail('id')
             ->games
             ->map(function (Game $game) {
-                $game->isRateable = $this->policy->checkAll($game);
+                $game->isRateable = $this->rateable->check($game);
 
                 return $game;
             });
