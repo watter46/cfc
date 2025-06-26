@@ -15,18 +15,10 @@ export function useGuestMatches() {
     queryKey: ["guest", "matches"],
     queryFn: async (): Promise<ActualMatchData[]> => {
       try {
-        // 統一されたAPIクライアント経由でゲスト用試合データを取得
         const result: ActualMatchResponse = await api.guest.matches.getAll();
 
-        // デバッグ用ログ
-        console.log("🏈 ゲスト用試合データ取得成功:", result);
-
-        // APIレスポンス形式: { data: [...] }
         const matches: ActualMatchData[] = result.data || [];
 
-        console.log("🏈 処理された試合データ:", matches);
-
-        // データをそのまま返す（APIレスポンスが既に正しい形式）
         return matches;
       } catch (error) {
         console.error("ゲスト用試合データの取得エラー:", error);
@@ -52,7 +44,6 @@ export function useGuestMatches() {
 export function useGuestRecentMatches(limit?: number) {
   const { data, isLoading, error, refetch } = useGuestMatches();
 
-  // limitが指定されている場合は制限をかける
   const recentMatches = limit && data ? data.slice(0, limit) : data;
 
   return {

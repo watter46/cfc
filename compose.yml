@@ -45,6 +45,7 @@ services:
       - ${WEB_PORT}:80
     volumes:
       - ./backend:/var/www/backend
+      - cfc_storage:/var/www/backend/storage/app/public
     depends_on:
       # - frontend
       - backend
@@ -64,14 +65,14 @@ services:
       - MYSQL_PASSWORD=${DB_PASS}
       - MYSQL_ROOT_PASSWORD=${DB_PASS}
 
-  db-testing:
-    container_name: ${APP_NAME}-db-testing-${ENV}
-    build:
-      context: .
-      dockerfile: ./infra/docker/mysql/Dockerfile
-    ports:
-      - 2000:3306
-    environment:
-      - MYSQL_DATABASE=${DB_TEST_NAME}
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_ALLOW_EMPTY_PASSWORD="yes"
+  # db-testing:
+  #   container_name: ${APP_NAME}-db-testing-${ENV}
+  #   build:
+  #     context: .
+  #     dockerfile: ./infra/docker/mysql/Dockerfile
+  #   ports:
+  #     - 2000:3306
+  #   environment:
+  #     - MYSQL_DATABASE=${DB_TEST_NAME}
+  #     - MYSQL_ROOT_PASSWORD=password
+  #     - MYSQL_ALLOW_EMPTY_PASSWORD="yes"
