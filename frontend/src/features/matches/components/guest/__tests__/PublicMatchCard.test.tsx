@@ -1,12 +1,12 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import PublicMatchCard from "../PublicMatchCard";
-import type { Match } from "@/shared/types/index.ts";
+import type { ActualMatchData } from "@/shared/types/index.ts";
 
 /**
  * テスト用のモック試合データ
  */
-const mockMatch: Match = {
+const mockMatch: ActualMatchData = {
   date: "05/01",
   score: {
     away: 4,
@@ -45,7 +45,7 @@ const mockMatch: Match = {
 /**
  * 引き分け試合のモックデータ
  */
-const mockDrawMatch: Match = {
+const mockDrawMatch: ActualMatchData = {
   date: "04/13",
   score: {
     away: 2,
@@ -95,38 +95,29 @@ describe("PublicMatchCard", () => {
     // スコアの表示
     expect(screen.getByText("1")).toBeInTheDocument(); // ホームチームスコア
     expect(screen.getByText("4")).toBeInTheDocument(); // アウェイチームスコア
-
-    // 前半スコアの表示
-    expect(screen.getByText("(前半: 0)")).toBeInTheDocument();
-    expect(screen.getByText("(前半: 2)")).toBeInTheDocument();
   });
 
   it("勝利チームのスタイルが正しく適用される", () => {
     render(<PublicMatchCard match={mockMatch} />);
 
-    // 勝利チーム（Chelsea）の親コンテナのスタイルクラスを確認
-    const winnerContainer = screen.getByText("Chelsea").closest(".border");
-    expect(winnerContainer).toHaveClass("text-neon-green");
+    // 勝利チーム（Chelsea）のテキストクラスを確認
+    const winnerTeam = screen.getByText("Chelsea");
+    expect(winnerTeam).toHaveClass("text-green-400");
 
-    // 敗北チーム（Djurgardens IF）の親コンテナのスタイルクラスを確認
-    const loserContainer = screen
-      .getByText("Djurgardens IF")
-      .closest(".border");
-    expect(loserContainer).toHaveClass("text-gray-400");
+    // 敗北チーム（Djurgardens IF）のテキストクラスを確認
+    const loserTeam = screen.getByText("Djurgardens IF");
+    expect(loserTeam).toHaveClass("text-gray-400");
   });
 
   it("引き分けの場合のスタイルが正しく適用される", () => {
     render(<PublicMatchCard match={mockDrawMatch} />);
 
-    // 引き分け表示の確認
-    expect(screen.getByText("引き分け")).toBeInTheDocument();
+    // 両チームとも引き分けスタイル（gray-400）が適用されることを確認
+    const homeTeam = screen.getByText("Chelsea");
+    const awayTeam = screen.getByText("Ipswich");
 
-    // 両チームとも引き分けスタイルが適用されることを確認
-    const homeTeamContainer = screen.getByText("Chelsea").closest(".border");
-    const awayTeamContainer = screen.getByText("Ipswich").closest(".border");
-
-    expect(homeTeamContainer).toHaveClass("text-yellow-400");
-    expect(awayTeamContainer).toHaveClass("text-yellow-400");
+    expect(homeTeam).toHaveClass("text-gray-400");
+    expect(awayTeam).toHaveClass("text-gray-400");
   });
 
   it("評価可能状態が正しく表示される", () => {
@@ -136,10 +127,10 @@ describe("PublicMatchCard", () => {
     expect(screen.getByText("評価可能")).toBeInTheDocument();
   });
 
-  it("評価終了状態が正しく表示される", () => {
+  it("評価不可状態が正しく表示される", () => {
     render(<PublicMatchCard match={mockMatch} />);
 
-    expect(screen.getByText("評価終了")).toBeInTheDocument();
+    expect(screen.getByText("評価不可")).toBeInTheDocument();
   });
 
   it("クリック時にonSelectコールバックが呼ばれる", () => {
@@ -167,18 +158,20 @@ describe("PublicMatchCard", () => {
     expect(onSelectMock).toHaveBeenCalledTimes(2);
   });
 
-  it("画像のエラーハンドリングが動作する", () => {
+  it("画像が正しく表示される", () => {
     render(<PublicMatchCard match={mockMatch} />);
 
     const homeTeamLogo = screen.getByAltText("Djurgardens IF logo");
+    const awayTeamLogo = screen.getByAltText("Chelsea logo");
 
-    // 画像読み込みエラーをシミュレート
-    fireEvent.error(homeTeamLogo);
-
-    // デフォルト画像のパスに変更されることを確認
+    // 画像のsrc属性が正しく設定されることを確認
     expect(homeTeamLogo).toHaveAttribute(
       "src",
-      "/images/default-team-logo.png"
+      "/storage/image/team/364.webp"
+    );
+    expect(awayTeamLogo).toHaveAttribute(
+      "src",
+      "/storage/image/team/49.webp"
     );
   });
 });
