@@ -4,59 +4,44 @@ import {
   type AuthContextType,
   type User,
 } from "./AuthContextDefinition";
+import { api } from "@/shared/lib/api-client";
 
 /**
- * APIのベースURL（環境変数から取得、デフォルトはlocalhost:8000）
+ * APIレスポンスをUser型に変換するヘルパー関数
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+function convertToUser(apiUser: any): User {
+  return {
+    id: String(apiUser.id), // numberをstringに変換
+    name: apiUser.name,
+    email: apiUser.email,
+    createdAt: apiUser.created_at ? new Date(apiUser.created_at) : new Date(), // created_at -> createdAt
+  };
+}
 
 /**
  * 認証プロバイダーコンポーネント
  * Laravel Sanctumとの認証連携を管理
+ * 統一されたAPIクライアントを使用
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   /**
-   * CSRF保護を有効にする
-   */
-  const initializeCsrf = async () => {
-    try {
-      await fetch(`${API_BASE_URL}/sanctum/csrf-cookie`, {
-        method: "GET",
-        credentials: "include",
-      });
-    } catch (error) {
-      console.error("CSRF initialization failed:", error);
-    }
-  };
-
-  /**
    * ログイン処理
+   * 統一されたAPIクライアントを使用
    */
   const login = async (email: string, password: string) => {
     try {
-      // CSRF保護の初期化
-      await initializeCsrf();
+      const loginData = await api.auth.login({ email, password });
 
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "ログインに失敗しました");
+      // トークンが返された場合は保存
+      if (loginData.token) {
+        localStorage.setItem("auth_token", loginData.token);
       }
 
-      // ユーザー情報を取得
-      await checkAuth();
+      // ユーザー情報を設定（APIレスポンスをUser型に変換）
+      setUser(convertToUser(loginData.user));
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -65,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * 新規登録処理
+   * 統一されたAPIクライアントを使用
    */
   const register = async (
     name: string,
@@ -73,31 +59,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     passwordConfirmation: string
   ) => {
     try {
-      // CSRF保護の初期化
-      await initializeCsrf();
-
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          password_confirmation: passwordConfirmation,
-        }),
+      console.log("新規登録処理を開始します:", { name, email });
+      const registerData = await api.auth.register({
+        name,
+        email,
+        password,
+        password_confirmation: passwordConfirmation,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "登録に失敗しました");
+      // トークンが返された場合は保存
+      if (registerData.token) {
+        localStorage.setItem("auth_token", registerData.token);
       }
 
-      // ユーザー情報を取得
-      await checkAuth();
+      // ユーザー情報を設定（APIレスポンスをUser型に変換）
+      setUser(convertToUser(registerData.user));
+      console.log("新規登録に成功しました:", registerData.user);
     } catch (error) {
       console.error("Registration failed:", error);
       throw error;
@@ -106,45 +83,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * ログアウト処理
+   * 統一されたAPIクライアントを使用
    */
   const logout = async () => {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-        },
-        credentials: "include",
-      });
+      console.log("ログアウト処理を開始します");
+      await api.auth.logout();
+      console.log("ログアウトに成功しました");
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
+      // ローカルの状態をクリア
       setUser(null);
+      localStorage.removeItem("auth_token");
     }
   };
 
   /**
-   * 認証状態の確認
+   * 認証状態の確認（サイレント認証）
+   * トークンを使ってユーザー情報を取得し、認証状態を復元します
    */
   const checkAuth = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
+      // トークンが存在しない場合は早期リターン
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
         setUser(null);
+        setIsLoading(false);
+        return;
       }
+
+      const authData = await api.auth.me();
+
+      // APIレスポンスがユーザー情報のみの場合（通常の/auth/meエンドポイント）
+      const userData = convertToUser(authData);
+
+      // 注意：/auth/meエンドポイントは通常、新しいトークンを返しません
+      // 既存のトークンをそのまま使用します
+
+      // ユーザー情報を設定
+      setUser(userData);
     } catch (error) {
       console.error("Auth check failed:", error);
       setUser(null);
+      // トークンが無効な場合は削除
+      localStorage.removeItem("auth_token");
     } finally {
       setIsLoading(false);
     }
@@ -152,27 +135,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * パスワードリセット処理
+   * 統一されたAPIクライアントを使用（将来的に実装予定）
    */
   const forgotPassword = async (email: string) => {
     try {
-      await initializeCsrf();
-
-      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ email }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "パスワードリセットメールの送信に失敗しました"
-        );
-      }
+      console.log("パスワードリセット処理を開始します:", email);
+      // TODO: APIクライアントにforgotPasswordメソッドを追加
+      throw new Error("パスワードリセット機能は現在実装中です");
     } catch (error) {
       console.error("Forgot password failed:", error);
       throw error;
@@ -180,24 +149,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   /**
-   * 初期化時に認証状態をチェック
+   * Google認証などでアクセストークンを保存し、認証状態を更新
    */
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  /**
-   * トークンの存在確認（セッションベース認証では常にfalse）
-   */
-  const hasToken = () => {
-    return false; // セッションベース認証ではトークンを使用しない
+  const setToken = async (token: string) => {
+    localStorage.setItem("auth_token", token);
+    await checkAuth();
   };
 
   /**
-   * トークンの削除（セッションベース認証では何もしない）
+   * Google認証成功時にユーザー情報とトークンを同時に設定
+   */
+  const setUserAndToken = async (user: User, token: string) => {
+    console.log("setUserAndToken called:", { user, token });
+    localStorage.setItem("auth_token", token);
+    setUser(user);
+    setIsLoading(false); // ローディング状態を解除
+    console.log("ユーザー情報とトークンの設定が完了しました");
+  };
+
+  /**
+   * 初期化時に認証状態をチェック
+   * 重複呼び出しを防ぐため初回のみ実行
+   */
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+
+    if (token) {
+      // トークンがある場合は、ユーザー情報の復元を試みる
+      checkAuth();
+    } else {
+      setIsLoading(false);
+    }
+  }, []); // 依存配列を空にして、初回のみ実行
+
+  /**
+   * トークンの存在確認
+   */
+  const hasToken = () => {
+    return !!localStorage.getItem("auth_token");
+  };
+
+  /**
+   * トークンの削除
    */
   const removeToken = () => {
-    // セッションベース認証ではトークンを使用しないため何もしない
+    localStorage.removeItem("auth_token");
   };
 
   const value: AuthContextType = {
@@ -211,6 +207,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     forgotPassword,
     hasToken,
     removeToken,
+    setToken, // 追加
+    setUserAndToken, // 新規追加
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

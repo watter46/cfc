@@ -20,7 +20,7 @@ import type {
 vi.mock("@/shared/lib/api-client", () => ({
   api: {
     auth: {
-      getUser: vi.fn(),
+      me: vi.fn(),
       login: vi.fn(),
       register: vi.fn(),
       logout: vi.fn(),
@@ -48,7 +48,7 @@ import type { MockedFunction } from "vitest";
 
 const mockApi = {
   auth: {
-    getUser: api.auth.getUser as MockedFunction<typeof api.auth.getUser>,
+    me: api.auth.me as MockedFunction<typeof api.auth.me>,
     login: api.auth.login as MockedFunction<typeof api.auth.login>,
     register: api.auth.register as MockedFunction<typeof api.auth.register>,
     logout: api.auth.logout as MockedFunction<typeof api.auth.logout>,
@@ -75,6 +75,16 @@ function createWrapper() {
 // モックデータ
 const mockUser: UserResponse = {
   id: 1,
+  name: "Test User",
+  email: "test@example.com",
+  email_verified_at: "2024-01-01T00:00:00.000Z",
+  created_at: "2024-01-01T00:00:00.000Z",
+  updated_at: "2024-01-01T00:00:00.000Z",
+};
+
+// SilentAuthResponse用のモックデータ
+const mockSilentAuthUser = {
+  id: "01JJ8XABCDEFGHIJKLMNOPQRST", // ULID形式
   name: "Test User",
   email: "test@example.com",
   email_verified_at: "2024-01-01T00:00:00.000Z",
@@ -171,13 +181,7 @@ describe("useCurrentUser", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // APIモックのデフォルト動作を設定
-    // @ts-expect-error - Partial AxiosResponse mock for testing
-    mockApi.auth.getUser.mockResolvedValue({
-      data: mockUser,
-      status: 200,
-      statusText: "OK",
-      headers: {},
-    });
+    mockApi.auth.me.mockResolvedValue(mockSilentAuthUser);
   });
 
   it("ユーザーデータを正常に取得できる", async () => {
@@ -190,15 +194,15 @@ describe("useCurrentUser", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data).toEqual(mockUser);
+    expect(result.current.data).toEqual(mockSilentAuthUser);
     expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBeNull();
-    expect(mockApi.auth.getUser).toHaveBeenCalled();
+    expect(mockApi.auth.me).toHaveBeenCalled();
   });
 
   it("認証エラーを適切に処理できる", async () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockApi.auth.getUser.mockRejectedValue({
+    mockLocalStorage.getItem.mockReturnValue("invalid-token");
+    mockApi.auth.me.mockRejectedValue({
       response: { status: 401 },
       message: "Unauthorized",
     });
@@ -215,6 +219,8 @@ describe("useCurrentUser", () => {
   });
 
   it("ローディング状態を正しく表示する", () => {
+    mockLocalStorage.getItem.mockReturnValue("mock-token");
+
     const wrapper = createWrapper();
     const { result } = renderHook(() => useCurrentUser(), { wrapper });
 
@@ -227,15 +233,9 @@ describe("useLogin", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // ログイン成功のデフォルトモック
-    // @ts-expect-error - Partial AxiosResponse mock for testing
     mockApi.auth.login.mockResolvedValue({
-      data: {
-        user: mockUser,
-        token: "mock-jwt-token-12345",
-      },
-      status: 200,
-      statusText: "OK",
-      headers: {},
+      user: mockUser,
+      token: "mock-jwt-token-12345",
     });
   });
 
@@ -290,15 +290,9 @@ describe("useRegister", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // 登録成功のデフォルトモック
-    // @ts-expect-error - Partial AxiosResponse mock for testing
     mockApi.auth.register.mockResolvedValue({
-      data: {
-        user: mockUser,
-        token: "mock-jwt-token-12345",
-      },
-      status: 201,
-      statusText: "Created",
-      headers: {},
+      user: mockUser,
+      token: "mock-jwt-token-12345",
     });
   });
 
@@ -361,12 +355,8 @@ describe("useLogout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // ログアウト成功のデフォルトモック
-    // @ts-expect-error - Partial AxiosResponse mock for testing
     mockApi.auth.logout.mockResolvedValue({
-      data: { message: "Logged out successfully" },
-      status: 200,
-      statusText: "OK",
-      headers: {},
+      message: "Logged out successfully",
     });
   });
 
@@ -391,39 +381,17 @@ describe("useAuthQuery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // useAuthQueryはuseCurrentUserを使用するため、デフォルトでuserを返すモック
-    // @ts-expect-error - Partial AxiosResponse mock for testing
-    mockApi.auth.getUser.mockResolvedValue({
-      data: mockUser,
-      status: 200,
-      statusText: "OK",
-      headers: {},
-    });
-    // @ts-expect-error - Partial AxiosResponse mock for testing
+    mockApi.auth.me.mockResolvedValue(mockSilentAuthUser);
     mockApi.auth.login.mockResolvedValue({
-      data: {
-        user: mockUser,
-        token: "mock-jwt-token-12345",
-      },
-      status: 200,
-      statusText: "OK",
-      headers: {},
+      user: mockUser,
+      token: "mock-jwt-token-12345",
     });
-    // @ts-expect-error - Partial AxiosResponse mock for testing
     mockApi.auth.register.mockResolvedValue({
-      data: {
-        user: mockUser,
-        token: "mock-jwt-token-12345",
-      },
-      status: 201,
-      statusText: "Created",
-      headers: {},
+      user: mockUser,
+      token: "mock-jwt-token-12345",
     });
-    // @ts-expect-error - Partial AxiosResponse mock for testing
     mockApi.auth.logout.mockResolvedValue({
-      data: { message: "Logged out successfully" },
-      status: 200,
-      statusText: "OK",
-      headers: {},
+      message: "Logged out successfully",
     });
   });
 
@@ -434,7 +402,7 @@ describe("useAuthQuery", () => {
     const { result } = renderHook(() => useAuthQuery(), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.user).toEqual(mockUser);
+      expect(result.current.user).toEqual(mockSilentAuthUser);
     });
 
     expect(result.current.isAuthenticated).toBe(true);
@@ -451,8 +419,8 @@ describe("useAuthQuery", () => {
 
   it("ユーザーが未認証の場合に正しい状態を提供する", async () => {
     mockLocalStorage.getItem.mockReturnValue(null);
-    // 未認証時はgetUserが実行されないかエラーになる
-    mockApi.auth.getUser.mockRejectedValue({
+    // 未認証時はmeが実行されないかエラーになる
+    mockApi.auth.me.mockRejectedValue({
       response: { status: 401 },
       message: "Unauthorized",
     });
@@ -474,6 +442,8 @@ describe("useAuthQuery", () => {
   });
 
   it("ローディング状態を正しく表示する", () => {
+    mockLocalStorage.getItem.mockReturnValue("mock-token");
+
     const wrapper = createWrapper();
     const { result } = renderHook(() => useAuthQuery(), { wrapper });
 

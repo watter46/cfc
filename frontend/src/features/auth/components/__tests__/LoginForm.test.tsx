@@ -230,7 +230,7 @@ describe("LoginForm", () => {
       await user.click(screen.getByRole("button", { name: "ログイン" }));
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith("/");
+        expect(mockNavigate).toHaveBeenCalledWith("/matches");
       });
     });
 

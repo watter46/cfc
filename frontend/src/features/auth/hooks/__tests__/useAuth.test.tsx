@@ -10,11 +10,10 @@ import {
 // モックのAuthContextValue
 const mockAuthContextValue: AuthContextType = {
   user: {
-    id: 1,
+    id: "1",
     name: "Test User",
     email: "test@example.com",
-    created_at: "2024-01-01T00:00:00.000Z",
-    updated_at: "2024-01-01T00:00:00.000Z",
+    createdAt: new Date("2024-01-01T00:00:00.000Z"),
   },
   isAuthenticated: true,
   isLoading: false,
@@ -65,11 +64,10 @@ describe("useAuth", () => {
   it("認証済みの場合：正しいユーザー情報を返す", () => {
     const authenticatedContext: AuthContextType = {
       user: {
-        id: 2,
+        id: "2",
         name: "John Doe",
         email: "john@example.com",
-        created_at: "2024-01-02T00:00:00.000Z",
-        updated_at: "2024-01-02T00:00:00.000Z",
+        createdAt: new Date("2024-01-02T00:00:00.000Z"),
       },
       isAuthenticated: true,
       isLoading: false,
@@ -90,7 +88,7 @@ describe("useAuth", () => {
       ),
     });
 
-    expect(result.current.user?.id).toBe(2);
+    expect(result.current.user?.id).toBe("2");
     expect(result.current.user?.name).toBe("John Doe");
     expect(result.current.user?.email).toBe("john@example.com");
     expect(result.current.isAuthenticated).toBe(true);
@@ -143,6 +141,56 @@ describe("useAuth", () => {
     });
 
     expect(result.current.isLoading).toBe(true);
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it("サイレント認証：初期化中状態の確認", () => {
+    const initializingContext: AuthContextType = {
+      user: null,
+      isAuthenticated: false,
+      isLoading: true,
+      login: () => Promise.resolve(),
+      logout: () => Promise.resolve(),
+      register: () => Promise.resolve(),
+      forgotPassword: () => Promise.resolve(),
+      checkAuth: () => Promise.resolve(),
+      hasToken: () => true,
+      removeToken: () => {},
+    };
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }) => (
+        <TestAuthProvider value={initializingContext}>
+          {children}
+        </TestAuthProvider>
+      ),
+    });
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it("サイレント認証：初期化完了状態の確認", () => {
+    const completedContext: AuthContextType = {
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      login: () => Promise.resolve(),
+      logout: () => Promise.resolve(),
+      register: () => Promise.resolve(),
+      forgotPassword: () => Promise.resolve(),
+      checkAuth: () => Promise.resolve(),
+      hasToken: () => false,
+      removeToken: () => {},
+    };
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }) => (
+        <TestAuthProvider value={completedContext}>{children}</TestAuthProvider>
+      ),
+    });
+
+    expect(result.current.isLoading).toBe(false);
     expect(result.current.isAuthenticated).toBe(false);
   });
 });
