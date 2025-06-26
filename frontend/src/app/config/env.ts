@@ -10,6 +10,8 @@ interface EnvironmentVariables {
   VITE_API_URL: string;
   VITE_BACKEND_URL: string;
   NODE_ENV: "development" | "production" | "test";
+  VITE_GOOGLE_CLIENT_ID: string; // GoogleクライアントID
+  VITE_GOOGLE_REDIRECT_URI: string; // Google認証リダイレクトURI
 }
 
 /**
@@ -34,7 +36,11 @@ function getEnvVar(
 export const ENV_CONFIG = {
   // API関連
   API_URL: getEnvVar("VITE_API_URL", "/api"),
-  BACKEND_URL: getEnvVar("VITE_BACKEND_URL", "http://172.17.0.1:8000"),
+  BACKEND_URL: getEnvVar("VITE_BACKEND_URL", "http://localhost:8000"),
+
+  // Google認証
+  GOOGLE_CLIENT_ID: getEnvVar("VITE_GOOGLE_CLIENT_ID"),
+  GOOGLE_REDIRECT_URI: getEnvVar("VITE_GOOGLE_REDIRECT_URI"),
 
   // 環境判定
   NODE_ENV: getEnvVar(
@@ -58,7 +64,9 @@ export function validateEnvironment(): void {
   try {
     // 必要な環境変数の存在確認
     getEnvVar("VITE_API_URL", "/api");
-    getEnvVar("VITE_BACKEND_URL", "http://172.17.0.1:8000");
+    getEnvVar("VITE_BACKEND_URL", "http://localhost:8000");
+    getEnvVar("VITE_GOOGLE_CLIENT_ID");
+    getEnvVar("VITE_GOOGLE_REDIRECT_URI");
 
     console.log("✅ Environment configuration validated successfully");
 

@@ -2,7 +2,6 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  avatar?: string;
   createdAt: Date;
 }
 
@@ -56,17 +55,11 @@ export interface Score {
 }
 
 /**
- * APIから取得される試合データの型定義
- * バックエンドのAPIレスポンスと一致するように設計
+ * 型定義は features/matches/types/api.ts に移動しました
+ * import { Match } from "@/features/matches/types/api" を使用してください
+ *
+ * 以下は下位互換性のためのレガシー型定義です
  */
-export interface Match {
-  date: string; // フォーマット: "MM/DD"
-  score: Score; // 終了した試合のみなので常にnon-null
-  home: Team;
-  away: Team;
-  WinnerTeamId: number | null; // 勝利チームのID（引き分けの場合はnull）
-  isRateable: boolean; // 評価可能かどうか
-}
 
 // MatchStatusはLIVEが不要なので、CompletedとUpcomingのみ
 export const MatchStatus = {
@@ -91,7 +84,7 @@ export interface PositionCoordinate {
   y: number;
 }
 
-// バックエンドAPIからのMatch データレスポンス形式
+// バックエンドAPIからのMatch データレスポンス形式（レガシー）
 export interface BackendMatchData {
   date: string;
   score: {
@@ -118,7 +111,7 @@ export interface BackendMatchData {
   isRateable: boolean;
 }
 
-// バックエンドAPIからのレスポンス全体
+// バックエンドAPIからのレスポンス全体（レガシー）
 export interface BackendMatchResponse {
   data: BackendMatchData[];
 }
@@ -133,6 +126,21 @@ export interface LaravelMatchData {
   isRateable: boolean;
 }
 
+// 実際のAPIレスポンス形式（現在使用中）
+export interface ActualMatchData {
+  date: string;
+  score: Score;
+  home: Team;
+  away: Team;
+  WinnerTeamId: number | null;
+  isRateable: boolean;
+}
+
 export interface LaravelMatchResponse {
   data: LaravelMatchData[];
+}
+
+// 実際のAPIレスポンス形式
+export interface ActualMatchResponse {
+  data: ActualMatchData[];
 }
