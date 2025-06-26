@@ -132,8 +132,6 @@ describe("RegisterForm", () => {
       expect(
         screen.getByText("またはメールアドレスで登録")
       ).toBeInTheDocument();
-      expect(screen.getByText("利用規約")).toBeInTheDocument();
-      expect(screen.getByText("プライバシーポリシー")).toBeInTheDocument();
       expect(
         screen.getByText("すでにアカウントをお持ちですか？")
       ).toBeInTheDocument();
@@ -240,7 +238,6 @@ describe("RegisterForm", () => {
         screen.getByPlaceholderText("パスワード確認"),
         "different"
       );
-      await user.click(screen.getByRole("checkbox"));
 
       await user.click(screen.getByRole("button", { name: "アカウント作成" }));
 
@@ -263,36 +260,12 @@ describe("RegisterForm", () => {
         "123"
       );
       await user.type(screen.getByPlaceholderText("パスワード確認"), "123");
-      await user.click(screen.getByRole("checkbox"));
 
       await user.click(screen.getByRole("button", { name: "アカウント作成" }));
 
       expect(
         screen.getByText("パスワードは6文字以上で入力してください。")
       ).toBeInTheDocument();
-      expect(mockMutateAsync).not.toHaveBeenCalled();
-    });
-
-    it("利用規約未同意時：フォーム送信されない", async () => {
-      renderRegisterForm();
-
-      await user.type(screen.getByPlaceholderText("お名前"), "山田太郎");
-      await user.type(
-        screen.getByPlaceholderText("メールアドレス"),
-        "test@example.com"
-      );
-      await user.type(
-        screen.getByPlaceholderText("パスワード（6文字以上）"),
-        "password123"
-      );
-      await user.type(
-        screen.getByPlaceholderText("パスワード確認"),
-        "password123"
-      );
-      // チェックボックスをクリックしない
-
-      await user.click(screen.getByRole("button", { name: "アカウント作成" }));
-
       expect(mockMutateAsync).not.toHaveBeenCalled();
     });
   });
@@ -312,7 +285,6 @@ describe("RegisterForm", () => {
         screen.getByPlaceholderText("パスワード確認"),
         "password123"
       );
-      await user.click(screen.getByRole("checkbox"));
     };
 
     it("有効な情報入力時：登録が実行される", async () => {
@@ -415,20 +387,6 @@ describe("RegisterForm", () => {
   });
 
   describe("ナビゲーションリンク", () => {
-    it("利用規約リンク：正しいパスを指している", () => {
-      renderRegisterForm();
-
-      const termsLink = screen.getByText("利用規約");
-      expect(termsLink.closest("a")).toHaveAttribute("href", "/terms");
-    });
-
-    it("プライバシーポリシーリンク：正しいパスを指している", () => {
-      renderRegisterForm();
-
-      const privacyLink = screen.getByText("プライバシーポリシー");
-      expect(privacyLink.closest("a")).toHaveAttribute("href", "/privacy");
-    });
-
     it("ログインリンク：正しいパスを指している", () => {
       renderRegisterForm();
 

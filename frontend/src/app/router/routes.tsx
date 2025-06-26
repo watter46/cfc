@@ -1,53 +1,53 @@
 import { Route } from "react-router-dom";
-import { ProtectedRoute, AuthGuard } from "./ProtectedRoute";
+import { ProtectedRoute } from "./ProtectedRoute";
+import { GuestGuard } from "./GuestGuard";
 
 // Page imports
 import Home from "../../pages/guest/Home";
 import LoginPage from "../../pages/auth/login";
 import RegisterPage from "../../pages/auth/register";
-// import AuthApiTestPage from "../../pages/dev/api-test";
-// import Api from "../../pages/dev/Api";
+import { SocialCallback } from "../../pages/auth/social-callback";
+import { MatchesPage } from "../../pages/matches/MatchesPage";
 
 /**
  * アプリケーションのルート定義
  */
 export const routes = [
-  // パブリックルート
+  // ゲスト専用ルート（ログイン済みユーザーは/matchesにリダイレクト）
   {
     path: "/",
-    element: <Home />,
+    element: (
+      <GuestGuard>
+        <Home />
+      </GuestGuard>
+    ),
     public: true,
   },
-
-  // 開発・テスト用ルート
-  // {
-  //   path: "/dev/api",
-  //   element: <Api />,
-  //   public: true,
-  // },
-  // {
-  //   path: "/dev/auth/register",
-  //   element: <AuthApiTestPage />,
-  //   public: true,
-  // },
 
   // 認証関連ルート（ログイン済みの場合はリダイレクト）
   {
     path: "/login",
     element: (
-      <AuthGuard>
+      <GuestGuard>
         <LoginPage />
-      </AuthGuard>
+      </GuestGuard>
     ),
     public: true,
   },
   {
     path: "/register",
     element: (
-      <AuthGuard>
+      <GuestGuard>
         <RegisterPage />
-      </AuthGuard>
+      </GuestGuard>
     ),
+    public: true,
+  },
+
+  // Google認証コールバックルート（要件に従って/auth/callbackに変更）
+  {
+    path: "/auth/callback",
+    element: <SocialCallback />,
     public: true,
   },
 
@@ -65,23 +65,11 @@ export const routes = [
     path: "/matches",
     element: (
       <ProtectedRoute>
-        <div>Matches Page (Coming Soon)</div>
+        <MatchesPage />
       </ProtectedRoute>
     ),
     protected: true,
   },
-  // TODO: 将来実装予定
-  // {
-  //   path: "/match/:id",
-  //   element: (
-  //     <ProtectedRoute>
-  //       <Layout>
-  //         <MatchDetailPage />
-  //       </Layout>
-  //     </ProtectedRoute>
-  //   ),
-  //   protected: true,
-  // },
 ] as const;
 
 /**

@@ -20,7 +20,7 @@ const LoginForm: React.FC = () => {
     try {
       await loginMutation.mutateAsync({ email, password });
       // トークンは自動的にuseLoginフックで保存される
-      navigate("/");
+      navigate("/matches");
     } catch (error) {
       // エラーはuseLoginフックで自動的に処理される
       console.error("Login failed:", error);

@@ -1,9 +1,10 @@
 import React from "react";
-import { ArrowRight, Star, Trophy, Share2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Star, Trophy, Share2, Bug } from "lucide-react";
 import MainLayout from "@/shared/components/layout/MainLayout.tsx";
 import PublicMatchCard from "@/features/matches/components/guest/PublicMatchCard.tsx";
-import { useRecentMatches } from "@/features/matches/hooks/useMatches.ts";
-import type { Match } from "@/shared/types/index.ts";
+import { useGuestRecentMatches } from "@/features/matches/hooks/guest/useGuestMatches.ts";
+import type { ActualMatchData as Match } from "@/shared/types/index.ts";
 
 /**
  * ローディングスピナーコンポーネント
@@ -29,8 +30,12 @@ function ErrorMessage({ error }: { error: Error }) {
 }
 
 const GuestHomePage: React.FC = () => {
-  // 最新の5試合を取得
-  const { data: recentMatches, isLoading, error } = useRecentMatches(5);
+  // 最新の5試合を取得（ゲスト用フック使用）
+  const {
+    data: recentMatches,
+    isLoading: matchesLoading,
+    error,
+  } = useGuestRecentMatches(5);
 
   return (
     <MainLayout>
@@ -48,8 +53,8 @@ const GuestHomePage: React.FC = () => {
               試合後の選手パフォーマンスをあなたの評価軸で採点し、コミュニティと共有しましょう。あなたの視点が新たな議論を生み出します。
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="/register"
+              <Link
+                to="/register"
                 className="btn btn-primary py-3 px-8 text-lg relative overflow-hidden group"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
@@ -60,13 +65,13 @@ const GuestHomePage: React.FC = () => {
                   />
                 </span>
                 <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-neon-blue opacity-0 group-hover:opacity-100 transition-opacity"></span>
-              </a>
-              <a
-                href="/matches"
+              </Link>
+              <Link
+                to="/matches"
                 className="btn border border-neon-blue bg-transparent text-neon-blue hover:bg-neon-blue/10 py-3 px-8 text-lg"
               >
                 試合を見る
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -89,7 +94,7 @@ const GuestHomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-            {isLoading ? (
+            {matchesLoading ? (
               <div className="col-span-full">
                 <LoadingSpinner />
               </div>
@@ -185,6 +190,19 @@ const GuestHomePage: React.FC = () => {
             >
               無料でアカウント作成
             </a>
+
+            {/* 開発環境でのAPIテストリンク */}
+            {import.meta.env.DEV && (
+              <div className="mt-4">
+                <Link
+                  to="/api-test"
+                  className="text-neon-blue hover:underline flex items-center gap-1.5 text-sm"
+                >
+                  <Bug size={16} />
+                  <span>API接続テスト（開発用）</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>

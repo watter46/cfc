@@ -1,13 +1,22 @@
 import axios from "axios";
+import { API_CONFIG, API_ENDPOINTS, getApiUrl } from "@/app/config/api";
+import type { MatchesResponse } from "@/features/matches/types/api";
+import type { ActualMatchResponse } from "@/shared/types/index";
+import type {
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
+  SilentAuthResponse,
+} from "@/features/auth/types/api";
 
 /**
  * Laravel Sanctum トークンベース認証対応のAxiosクライアント
  * APIトークン認証とエラーハンドリングを一元管理
  */
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
-  withCredentials: false, // トークンベース認証のためfalse
-  timeout: 10000, // 10秒でタイムアウト
+  baseURL: API_CONFIG.baseURL,
+  timeout: API_CONFIG.timeout,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -22,13 +31,18 @@ apiClient.interceptors.request.use(
   (config) => {
     // 認証トークンがあれば自動で付与
     const token = localStorage.getItem("auth_token");
+
+    // 不正なトークンをクリア
+    if (token === "undefined" || token === "null") {
+      console.warn("⚠️ 不正なトークンを検出しました。クリアします");
+      localStorage.removeItem("auth_token");
+      return config;
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log(
-      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`
-    );
     return config;
   },
   (error) => {
@@ -43,19 +57,24 @@ apiClient.interceptors.request.use(
  */
 apiClient.interceptors.response.use(
   (response) => {
-    console.log(`✅ API Response: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
-    // 401エラー（認証失敗）の場合はトークンを削除してログイン画面にリダイレクト
+    // 401エラー（認証失敗）の場合はトークンを削除
     if (error.response?.status === 401) {
+      console.warn("🔐 認証エラーが発生しました。トークンを削除します。");
       localStorage.removeItem("auth_token");
-      window.location.href = "/login";
     }
 
-    // トークンベース認証では419エラー（CSRF）の処理は不要
+    // ネットワークエラーの場合
+    if (
+      error.code === "NETWORK_ERROR" ||
+      error.message.includes("Network Error")
+    ) {
+      console.error("🌐 ネットワークエラー: APIサーバーに接続できません");
+      console.error("Base URL:", apiClient.defaults.baseURL);
+    }
 
-    console.error("❌ API Error:", error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
@@ -64,47 +83,81 @@ apiClient.interceptors.response.use(
  * 型安全なAPI関数群
  */
 export const api = {
-  // ゲーム関連
-  games: {
-    getLatest: () => apiClient.get("/"),
-    getById: (id: string) => apiClient.get(`/games/${id}`),
+  // 認証関連
+  auth: {
+    login: async (credentials: LoginRequest): Promise<LoginResponse> => {
+      const response = await apiClient.post(
+        getApiUrl(API_ENDPOINTS.auth.login),
+        credentials
+      );
+      return response.data.data;
+    },
+    register: async (userData: RegisterRequest): Promise<RegisterResponse> => {
+      const response = await apiClient.post(
+        getApiUrl(API_ENDPOINTS.auth.register),
+        userData
+      );
+      return response.data;
+    },
+    logout: async (): Promise<{ message: string }> => {
+      const response = await apiClient.post(
+        getApiUrl(API_ENDPOINTS.auth.logout)
+      );
+      return response.data;
+    },
+    me: async (): Promise<SilentAuthResponse> => {
+      const response = await apiClient.get(getApiUrl(API_ENDPOINTS.auth.me));
+      return response.data.data;
+    },
+    getTokens: async () => {
+      const response = await apiClient.get(getApiUrl("/auth/tokens"));
+      return response.data;
+    },
+    revokeToken: async (tokenId: string) => {
+      const response = await apiClient.delete(
+        getApiUrl(`/auth/tokens/${tokenId}`)
+      );
+      return response.data;
+    },
+    revokeAllTokens: async () => {
+      const response = await apiClient.post(
+        getApiUrl("/auth/tokens/revoke-all")
+      );
+      return response.data;
+    },
   },
 
-  // 試合関連
+  // 試合関連（認証済みユーザー用）
   matches: {
-    getAll: () => apiClient.get("/"),
-    getFeatured: () => apiClient.get("/"), // ルートエンドポイントから取得
-    getById: (id: string) => apiClient.get(`/matches/${id}`),
+    getAll: async (): Promise<MatchesResponse> => {
+      const response = await apiClient.get(
+        getApiUrl(API_ENDPOINTS.matches.list)
+      );
+      return response.data;
+    },
+  },
+
+  // ゲスト用API（認証不要）
+  guest: {
+    matches: {
+      /**
+       * ゲスト用の試合一覧を取得
+       * 認証不要でパブリックな試合データのみを取得
+       */
+      getAll: async (): Promise<ActualMatchResponse> => {
+        const response = await apiClient.get(
+          getApiUrl(API_ENDPOINTS.guest.matches.list)
+        );
+        return response.data;
+      },
+    },
   },
 
   // テスト関連
   test: {
-    getTest: () => apiClient.get("/test"),
-  },
-
-  // 認証関連
-  auth: {
-    login: (credentials: { email: string; password: string }) =>
-      apiClient.post("/auth/login", credentials),
-    register: (userData: {
-      name: string;
-      email: string;
-      password: string;
-      password_confirmation: string;
-    }) => apiClient.post("/auth/register", userData),
-    logout: () => apiClient.post("/auth/logout"),
-    getUser: () => apiClient.get("/auth/me"),
-    getTokens: () => apiClient.get("/auth/tokens"),
-    revokeToken: (tokenId: string) =>
-      apiClient.delete(`/auth/tokens/${tokenId}`),
-    revokeAllTokens: () => apiClient.post("/auth/tokens/revoke-all"),
-  },
-
-  // 試合評価関連（将来の実装）
-  ratings: {
-    submitRating: (matchId: string, ratings: Record<string, number>) =>
-      apiClient.post(`/matches/${matchId}/ratings`, ratings),
-    getRatings: (matchId: string) =>
-      apiClient.get(`/matches/${matchId}/ratings`),
+    getTest: async () => {
+      const response = await apiClient.get(getApiUrl("/test"));
+      return response.data;
+    },
   },
 } as const;

@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import type { User } from "../types";
+import type { User } from "@/shared/types";
 
 export type { User };
 
@@ -20,6 +20,8 @@ export interface AuthContextType {
   // トークンベース認証用の追加メソッド
   hasToken: () => boolean;
   removeToken: () => void;
+  setToken?: (token: string) => Promise<void>; // Google認証用
+  setUserAndToken?: (user: User, token: string) => Promise<void>; // Google認証用（ユーザー情報付き）
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(

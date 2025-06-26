@@ -1,4 +1,4 @@
-import type { Match } from "@/shared/types/index.ts";
+import type { ActualMatchData as Match } from "@/shared/types/index.ts";
 import { Check, Lock } from "lucide-react";
 
 /**
@@ -25,8 +25,9 @@ export function PublicMatchCard({ match, onSelect }: PublicMatchCardProps) {
    * 勝者チームを判定するヘルパー関数
    */
   const getWinnerStatus = (teamId: number): "winner" | "loser" | "draw" => {
-    if (match.WinnerTeamId === null) return "draw";
-    return match.WinnerTeamId === teamId ? "winner" : "loser";
+    if (match.WinnerTeamId === null || match.WinnerTeamId === undefined)
+      return "draw";
+    return Number(match.WinnerTeamId) === teamId ? "winner" : "loser";
   };
 
   /**

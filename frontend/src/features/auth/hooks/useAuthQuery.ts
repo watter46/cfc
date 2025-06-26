@@ -5,7 +5,7 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-  UserResponse,
+  SilentAuthResponse,
   ApiError,
 } from "../types/api";
 
@@ -46,14 +46,12 @@ export const authTokenUtils = {
  * ユーザー情報を取得するためのカスタムフック
  */
 export function useCurrentUser() {
-  return useQuery<UserResponse, ApiError>({
+  return useQuery<SilentAuthResponse, ApiError>({
     queryKey: ["user", "current"],
-    queryFn: async (): Promise<UserResponse> => {
-      const response = await api.auth.getUser();
-      return response.data;
-    },
+    queryFn: () => api.auth.me(),
     staleTime: 30 * 60 * 1000, // 30分間はキャッシュを新鮮として扱う
     retry: false, // 認証エラーの場合は再試行しない
+    enabled: authTokenUtils.hasToken(), // トークンがある場合のみ実行
   });
 }
 
@@ -64,16 +62,12 @@ export function useLogin() {
   const queryClient = useQueryClient();
 
   return useMutation<LoginResponse, ApiError, LoginRequest>({
-    mutationFn: async (credentials: LoginRequest): Promise<LoginResponse> => {
-      const response = await api.auth.login(credentials);
-      // バックエンドレスポンス: {message: "...", data: {user: {...}, token: "..."}}
-      return response.data.data || response.data;
-    },
+    mutationFn: (credentials: LoginRequest) => api.auth.login(credentials),
     onSuccess: (data) => {
       // トークンをローカルストレージに保存
       authTokenUtils.setToken(data.token);
       // ログイン成功時にユーザー情報を再取得
-      queryClient.invalidateQueries({ queryKey: ["auth", "user"] });
+      queryClient.invalidateQueries({ queryKey: ["user", "current"] });
     },
   });
 }
@@ -85,18 +79,12 @@ export function useRegister() {
   const queryClient = useQueryClient();
 
   return useMutation<RegisterResponse, ApiError, RegisterRequest>({
-    mutationFn: async (
-      userData: RegisterRequest
-    ): Promise<RegisterResponse> => {
-      const response = await api.auth.register(userData);
-      // バックエンドレスポンス: {message: "...", data: {user: {...}, token: "..."}}
-      return response.data.data || response.data;
-    },
+    mutationFn: (userData: RegisterRequest) => api.auth.register(userData),
     onSuccess: (data) => {
       // トークンをローカルストレージに保存
       authTokenUtils.setToken(data.token);
       // 登録成功時にユーザー情報を再取得
-      queryClient.invalidateQueries({ queryKey: ["auth", "user"] });
+      queryClient.invalidateQueries({ queryKey: ["user", "current"] });
     },
   });
 }

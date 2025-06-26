@@ -8,23 +8,19 @@ interface ProtectedRouteProps {
 
 /**
  * 認証が必要なルートを保護するコンポーネント
+ * 要件: トークンベース認証に変更
  */
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const token = localStorage.getItem("auth_token");
 
-  // ローディング中は適切なローディング表示
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  console.log("ProtectedRoute - トークンチェック:", { hasToken: !!token });
 
-  if (!isAuthenticated) {
+  if (!token) {
+    console.log("トークンがないため、ログインページにリダイレクト");
     return <Navigate to="/login" replace />;
   }
 
+  console.log("トークンが存在するため、保護されたコンテンツを表示");
   return <>{children}</>;
 }
 
@@ -42,9 +38,9 @@ export function AuthGuard({ children }: ProtectedRouteProps) {
     );
   }
 
-  // 既にログインしている場合はホームページにリダイレクト
+  // 既にログインしている場合は/matchesページにリダイレクト
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/matches" replace />;
   }
 
   return <>{children}</>;

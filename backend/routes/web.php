@@ -2,9 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\User\AuthController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::prefix('user/auth')->group(function () {
+    // ソーシャルログイン - リダイレクト
+    Route::get('/{provider}/redirect', [SocialAuthController::class, 'redirect'])
+        ->where('provider', 'google|x');
+
+    // ソーシャルログイン - コールバック
+    Route::get('/{provider}/callback', [SocialAuthController::class, 'callback'])
+        ->where('provider', 'google|x');
+});
