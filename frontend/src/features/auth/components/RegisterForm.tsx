@@ -196,25 +196,6 @@ const RegisterForm: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex items-center">
-          <input
-            id="terms"
-            type="checkbox"
-            className="rounded bg-space-700 border-space-600 text-neon-blue focus:ring-neon-blue mr-2"
-            required
-          />
-          <label htmlFor="terms" className="text-sm text-gray-300">
-            <Link to="/terms" className="text-neon-blue hover:underline">
-              利用規約
-            </Link>
-            と
-            <Link to="/privacy" className="text-neon-blue hover:underline">
-              プライバシーポリシー
-            </Link>
-            に同意します
-          </label>
-        </div>
-
         <button
           type="submit"
           disabled={isLoading}
