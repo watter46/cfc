@@ -18,7 +18,7 @@ return new class () extends Migration {
             $table->string('name')->comment('ユーザー名');
             $table->string('email')->unique()->comment('メールアドレス');
             $table->timestamp('email_verified_at')->nullable()->comment('メールアドレス確認日時');
-            $table->string('password')->comment('パスワード');
+            $table->string('password')->nullable()->comment('パスワード');
             $table->string('remember_token')->nullable()->comment('リメンバートークン');
             $table->string('role')->default('user')->comment('ユーザー権限');
             $table->string('provider')->nullable()->comment('プロバイダー');

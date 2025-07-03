@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Auth;
 use App\Exceptions\Auth\SocialLoginException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\SocialLoginRequest;
-use App\Http\Resources\UserResource;
+use App\Http\Resources\Auth\UserResource;
 use App\Traits\Loggable;
 use App\UseCases\Auth\Social\SocialLoginAction;
 use Exception;
@@ -18,7 +18,7 @@ use Laravel\Socialite\Facades\Socialite;
  * ソーシャルログイン認証コントローラー
  * 
  * Google・Xを使用したOAuth認証を処理し、
- * Sanctumトークンを発行してAPIレスポンスを返します。
+ * セッションベースの認証でログイン状態を管理します。
  * 
  * ビジネスロジックはUseCaseに委譲し、Controllerは薄く保ちます。
  */
@@ -68,7 +68,6 @@ final class SocialAuthController extends Controller
                 throw SocialLoginException::userInfoRetrievalFailed($provider->value);
             }
 
-            // UseCaseにビジネスロジックを委譲
             $result = $this->socialLoginAction->execute($socialiteUser, $provider);
 
             $this->logComplete([
@@ -77,9 +76,7 @@ final class SocialAuthController extends Controller
                 'is_new_user' => $result['is_new_user']
             ]);
 
-            // フロントエンドの認証処理ページにリダイレクト
-            $tokenParam = $result['token'];
-            $redirectUrl = "$frontendBaseUrl/auth/callback?token={$tokenParam}";
+            $redirectUrl = "$frontendBaseUrl/auth/callback";
             
             return redirect($redirectUrl);
 

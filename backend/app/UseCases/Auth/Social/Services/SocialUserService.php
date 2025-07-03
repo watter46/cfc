@@ -147,7 +147,6 @@ final readonly class SocialUserService
             'provider' => $provider->value,
             'provider_id' => $socialiteUser->id,
             'role' => RoleType::User->value,
-            'password' => '', // ソーシャルログインはパスワード不要
         ];
     }
 

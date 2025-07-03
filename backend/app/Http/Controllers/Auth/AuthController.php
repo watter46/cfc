@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\User\Auth\LoginRequest;
-use App\Http\Requests\User\Auth\RegisterRequest;
-use App\Http\Resources\AuthResource;
-use App\Http\Resources\UserResource;
-use App\UseCases\Auth\Login\LoginAction;
-use App\UseCases\Auth\Register\RegisterAction;
+use App\Http\Requests\User\Auth\SigninRequest;
+use App\Http\Requests\User\Auth\SignupRequest;
+use App\Http\Resources\Auth\UserResource;
+use App\UseCases\Auth\Signin\SigninAction;
+use App\UseCases\Auth\Signup\SignupAction;
+use App\UseCases\Auth\Signout\SignoutAction;
 use Exception;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
@@ -21,14 +21,15 @@ use Illuminate\Validation\ValidationException;
 final class AuthController extends Controller
 {
     public function __construct(
-        private readonly RegisterAction $registerAction,
-        private readonly LoginAction $loginAction
+        private readonly SignupAction $signupAction,
+        private readonly SigninAction $signinAction,
+        private readonly SignoutAction $signoutAction
     ) {}
 
-    public function register(RegisterRequest $request): AuthResource|JsonResponse
+    public function signup(SignupRequest $request): UserResource|JsonResponse
     {
         try {
-            return $this->registerAction->execute($request->validated());
+            return $this->signupAction->execute($request->validated());
 
         } catch (ValidationException $e) {
             Log::warning('バリデーションエラー（登録処理）', ['errors' => $e->errors()]);
@@ -46,10 +47,10 @@ final class AuthController extends Controller
         }
     }
 
-    public function login(LoginRequest $request): AuthResource|JsonResponse
+    public function signin(SigninRequest $request): UserResource|JsonResponse
     {
         try {
-            return $this->loginAction->execute($request->validated());
+            return $this->signinAction->execute($request->validated());
 
         } catch (AuthenticationException $e) {
             Log::warning('認証失敗', ['error' => $e->getMessage()]);
@@ -66,19 +67,16 @@ final class AuthController extends Controller
         }
     }
 
-    public function logout(Request $request): JsonResponse
+    public function signout(Request $request): JsonResponse
     {
         try {
-            $user = $request->user();
+            $success = $this->signoutAction->execute($request);
 
-            if (!$user) {
+            if (!$success) {
                 return response()->json([
                     'message' => '既にログアウト済みです。',
                 ], 401);
             }
-
-            // 現在のトークンを削除
-            $request->user()->currentAccessToken()->delete();
 
             return response()->json([
                 'message' => 'ログアウトが完了しました。',
