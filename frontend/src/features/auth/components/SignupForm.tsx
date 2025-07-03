@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { useRegister } from "../hooks/useAuthQuery";
-import { getErrorMessage } from "../utils/errorHandling";
+import { useAuth } from "../hooks/useAuth";
 import SocialLoginButtons from "./SocialLoginButtons";
+import { ErrorDisplay } from "@/shared/components/ui/ErrorDisplay";
+import { LoadingSpinner } from "@/shared/components/ui/LoadingSpinner";
 
-const RegisterForm: React.FC = () => {
+const SignupForm: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,16 +15,17 @@ const RegisterForm: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validationError, setValidationError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [debugInfo, setDebugInfo] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<any>(null);
 
-  const registerMutation = useRegister();
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError("");
     setSuccessMessage("");
-    setDebugInfo("");
+    setError(null);
 
     // フロントエンドバリデーション
     if (password !== confirmPassword) {
@@ -36,60 +38,29 @@ const RegisterForm: React.FC = () => {
       return;
     }
 
-    setDebugInfo("登録処理を開始中...");
+    setIsLoading(true);
 
     try {
-      // 登録データをログ出力（パスワードは除く）
-      console.log("Registration attempt:", {
-        name,
-        email,
-        passwordLength: password.length,
-      });
-      setDebugInfo(
-        `送信データ: 名前=${name}, メール=${email}, パスワード長=${password.length}`
-      );
+      console.log("🔄 サインアップ処理を開始します:", { name, email });
 
-      const result = await registerMutation.mutateAsync({
-        name,
-        email,
-        password,
-        password_confirmation: confirmPassword,
-      });
-      console.log("Registration successful:", result);
+      await signup(name, email, password, confirmPassword);
 
       setSuccessMessage(
-        "アカウントが正常に作成されました！ログインしています..."
+        "アカウントが正常に作成されました！ホームページに移動します..."
       );
-      setDebugInfo(`登録成功 - トークン受信: ${result.token ? "✓" : "✗"}`);
+      console.log("✅ サインアップに成功しました");
 
       // 短い遅延後にホームページにリダイレクト
       setTimeout(() => {
-        setDebugInfo("ホームページへ移動...");
         navigate("/");
       }, 1500);
-    } catch (error: unknown) {
-      console.error("Registration failed:", error);
-
-      // より詳細なエラー情報を表示
-      let errorDetails = "詳細不明";
-      if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as {
-          response: { status: number; data: unknown };
-        };
-        errorDetails = `ステータス: ${axiosError.response.status}, データ: ${JSON.stringify(axiosError.response.data)}`;
-      } else if (error && typeof error === "object" && "message" in error) {
-        errorDetails = (error as { message: string }).message;
-      }
-
-      setDebugInfo(`登録エラー: ${errorDetails}`);
+    } catch (error: any) {
+      console.error("❌ サインアップに失敗しました:", error);
+      setError(error);
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const apiErrorMessage = registerMutation.error
-    ? getErrorMessage(registerMutation.error)
-    : "";
-  const errorMessage = validationError || apiErrorMessage;
-  const isLoading = registerMutation.isPending;
 
   return (
     <div className="card-glass p-8 w-full max-w-md mx-auto">
@@ -97,21 +68,23 @@ const RegisterForm: React.FC = () => {
         アカウント作成
       </h2>
 
-      {errorMessage && (
+      {validationError && (
         <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-md text-red-400 text-sm">
-          {errorMessage}
+          {validationError}
         </div>
+      )}
+
+      {error && (
+        <ErrorDisplay
+          error={error}
+          onRetry={() => setError(null)}
+          className="mb-4"
+        />
       )}
 
       {successMessage && (
         <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-md text-green-400 text-sm">
           {successMessage}
-        </div>
-      )}
-
-      {debugInfo && (
-        <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md text-blue-400 text-sm">
-          デバッグ: {debugInfo}
         </div>
       )}
 
@@ -201,8 +174,9 @@ const RegisterForm: React.FC = () => {
           disabled={isLoading}
           className="btn btn-primary w-full py-3 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span className="relative z-10">
-            {isLoading ? "登録中..." : "アカウント作成"}
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            {isLoading && <LoadingSpinner size="sm" variant="default" />}
+            {isLoading ? "サインアップ中..." : "アカウント作成"}
           </span>
           <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-neon-blue opacity-0 group-hover:opacity-100 transition-opacity"></span>
         </button>
@@ -210,12 +184,12 @@ const RegisterForm: React.FC = () => {
 
       <p className="mt-6 text-center text-gray-400">
         すでにアカウントをお持ちですか？{" "}
-        <Link to="/login" className="text-neon-blue hover:underline">
-          ログイン
+        <Link to="/signin" className="text-neon-blue hover:underline">
+          サインイン
         </Link>
       </p>
     </div>
   );
 };
 
-export default RegisterForm;
+export default SignupForm;

@@ -8,19 +8,21 @@ interface ProtectedRouteProps {
 
 /**
  * 認証が必要なルートを保護するコンポーネント
- * 要件: トークンベース認証に変更
+ * Cookie-based認証を使用
  */
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const token = localStorage.getItem("auth_token");
+  const { user, isLoading } = useAuth();
 
-  console.log("ProtectedRoute - トークンチェック:", { hasToken: !!token });
+  // 認証情報の読み込み中は何も表示しない
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-  if (!token) {
-    console.log("トークンがないため、ログインページにリダイレクト");
+  // 認証されていない場合はログインページにリダイレクト
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  console.log("トークンが存在するため、保護されたコンテンツを表示");
   return <>{children}</>;
 }
 

@@ -1,13 +1,14 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { GuestGuard } from "./GuestGuard";
 
 // Page imports
 import Home from "../../pages/guest/Home";
-import LoginPage from "../../pages/auth/login";
-import RegisterPage from "../../pages/auth/register";
+import SigninPage from "../../pages/auth/signin";
+import SignupPage from "../../pages/auth/signup";
 import { SocialCallback } from "../../pages/auth/social-callback";
 import { MatchesPage } from "../../pages/matches/MatchesPage";
+import { MatchDetailPage } from "../../pages/matches/MatchDetailPage";
 
 /**
  * アプリケーションのルート定義
@@ -26,19 +27,19 @@ export const routes = [
 
   // 認証関連ルート（ログイン済みの場合はリダイレクト）
   {
-    path: "/login",
+    path: "/signin",
     element: (
       <GuestGuard>
-        <LoginPage />
+        <SigninPage />
       </GuestGuard>
     ),
     public: true,
   },
   {
-    path: "/register",
+    path: "/signup",
     element: (
       <GuestGuard>
-        <RegisterPage />
+        <SignupPage />
       </GuestGuard>
     ),
     public: true,
@@ -69,6 +70,27 @@ export const routes = [
       </ProtectedRoute>
     ),
     protected: true,
+  },
+  {
+    path: "/matches/:matchId",
+    element: (
+      <ProtectedRoute>
+        <MatchDetailPage />
+      </ProtectedRoute>
+    ),
+    protected: true,
+  },
+
+  // 後方互換性のためのリダイレクトルート
+  {
+    path: "/login",
+    element: <Navigate to="/signin" replace />,
+    public: true,
+  },
+  {
+    path: "/register",
+    element: <Navigate to="/signup" replace />,
+    public: true,
   },
 ] as const;
 

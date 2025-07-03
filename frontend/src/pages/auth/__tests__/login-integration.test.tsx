@@ -37,12 +37,12 @@ vi.mock("@/features/auth/utils/errorHandling", () => ({
   }),
 }));
 
-// useLoginフックのモック
+// useSigninフックのモック
 const mockMutateAsync = vi.fn();
 const mockMutate = vi.fn();
 const mockReset = vi.fn();
 
-const createMockUseLogin = (
+const createMockUseSignin = (
   overrides: Partial<
     UseMutationResult<LoginResponse, ApiError, LoginRequest, unknown>
   > = {}
@@ -67,7 +67,7 @@ const createMockUseLogin = (
     ...overrides,
   }) as UseMutationResult<LoginResponse, ApiError, LoginRequest, unknown>;
 
-const mockUseLogin = createMockUseLogin();
+const mockUseSignin = createMockUseSignin();
 
 describe("LoginPage 統合テスト", () => {
   let queryClient: QueryClient;

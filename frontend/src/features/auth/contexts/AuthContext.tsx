@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   AuthContext,
   type AuthContextType,
   type User,
 } from "./AuthContextDefinition";
 import { api } from "@/shared/lib/api-client";
+import { API_CONFIG } from "@/app/config/api";
 
 /**
  * APIレスポンスをUser型に変換するヘルパー関数
@@ -26,120 +27,167 @@ function convertToUser(apiUser: any): User {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initializationPromise, setInitializationPromise] =
+    useState<Promise<void> | null>(null);
+  const hasInitialized = useRef(false);
 
   /**
-   * ログイン処理
+   * サインイン処理
    * 統一されたAPIクライアントを使用
+   * 成功時にユーザー状態を即座に更新
    */
-  const login = async (email: string, password: string) => {
+  const signin = async (email: string, password: string) => {
     try {
-      const loginData = await api.auth.login({ email, password });
+      const signinResponse = await api.auth.signin({ email, password });
 
-      // トークンが返された場合は保存
-      if (loginData.token) {
-        localStorage.setItem("auth_token", loginData.token);
+      // ユーザー情報を設定（APIレス
+      const newUser = convertToUser(signinResponse.data);
+      setUser(newUser);
+      setIsLoading(false);
+
+      return newUser; // 成功時にユーザー情報を返す
+    } catch (error: any) {
+      console.error("❌ Signin failed:", error);
+
+      // エラーメッセージを詳細化
+      let errorMessage = "ログインに失敗しました";
+      if (error.response?.status === 401) {
+        errorMessage = "メールアドレスまたはパスワードが間違っています";
+      } else if (error.response?.status === 422) {
+        errorMessage = "入力内容に問題があります";
+      } else if (error.code === "NETWORK_ERROR") {
+        errorMessage = "ネットワークエラーが発生しました";
       }
 
-      // ユーザー情報を設定（APIレスポンスをUser型に変換）
-      setUser(convertToUser(loginData.user));
-    } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
+      // エラーを再スローしてUIで表示できるようにする
+      const enhancedError = new Error(errorMessage);
+      (enhancedError as any).originalError = error;
+      throw enhancedError;
     }
   };
 
   /**
-   * 新規登録処理
+   * サインアップ処理
    * 統一されたAPIクライアントを使用
    */
-  const register = async (
+  const signup = async (
     name: string,
     email: string,
     password: string,
     passwordConfirmation: string
   ) => {
     try {
-      console.log("新規登録処理を開始します:", { name, email });
-      const registerData = await api.auth.register({
+      const signupResponse = await api.auth.signup({
         name,
         email,
         password,
         password_confirmation: passwordConfirmation,
       });
 
-      // トークンが返された場合は保存
-      if (registerData.token) {
-        localStorage.setItem("auth_token", registerData.token);
+      // ユーザー情報を設定（APIレスポンスをUser型に変換）
+      setUser(convertToUser(signupResponse.data));
+    } catch (error: any) {
+      console.error("Signup failed:", error);
+
+      // エラーメッセージを詳細化
+      let errorMessage = "アカウント作成に失敗しました";
+      if (error.response?.status === 422) {
+        errorMessage = "入力内容に問題があります";
+      } else if (error.response?.data?.errors) {
+        // バリデーションエラーの詳細を取得
+        const errors = error.response.data.errors;
+        errorMessage = Object.values(errors).flat().join(", ");
+      } else if (error.code === "NETWORK_ERROR") {
+        errorMessage = "ネットワークエラーが発生しました";
       }
 
-      // ユーザー情報を設定（APIレスポンスをUser型に変換）
-      setUser(convertToUser(registerData.user));
-      console.log("新規登録に成功しました:", registerData.user);
-    } catch (error) {
-      console.error("Registration failed:", error);
-      throw error;
+      // エラーを再スローしてUIで表示できるようにする
+      const enhancedError = new Error(errorMessage);
+      (enhancedError as any).originalError = error;
+      throw enhancedError;
     }
   };
 
   /**
-   * ログアウト処理
+   * サインアウト処理
    * 統一されたAPIクライアントを使用
    */
-  const logout = async () => {
+  const signout = async () => {
     try {
-      console.log("ログアウト処理を開始します");
-      await api.auth.logout();
-      console.log("ログアウトに成功しました");
+      // APIサーバーにサインアウトリクエストを送信
+      await api.auth.signout();
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Signout API failed:", error);
+
+      // API呼び出しが失敗してもローカル状態はクリアする
     } finally {
-      // ローカルの状態をクリア
+      // ローカルの状態を必ずクリア
       setUser(null);
-      localStorage.removeItem("auth_token");
     }
   };
 
   /**
-   * 認証状態の確認（サイレント認証）
-   * トークンを使ってユーザー情報を取得し、認証状態を復元します
+   * 認証状態を確認し復元する
+   * アプリ起動時にCSRFトークンも初期化
+   * React Strict Mode対応：重複実行を完全に防止
    */
   const checkAuth = async () => {
-    try {
-      // トークンが存在しない場合は早期リターン
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
-        setUser(null);
-        setIsLoading(false);
-        return;
+    // refでも二重チェック
+    if (hasInitialized.current || isInitialized || initializationPromise) {
+      if (initializationPromise) {
+        await initializationPromise;
       }
-
-      const authData = await api.auth.me();
-
-      // APIレスポンスがユーザー情報のみの場合（通常の/auth/meエンドポイント）
-      const userData = convertToUser(authData);
-
-      // 注意：/auth/meエンドポイントは通常、新しいトークンを返しません
-      // 既存のトークンをそのまま使用します
-
-      // ユーザー情報を設定
-      setUser(userData);
-    } catch (error) {
-      console.error("Auth check failed:", error);
-      setUser(null);
-      // トークンが無効な場合は削除
-      localStorage.removeItem("auth_token");
-    } finally {
-      setIsLoading(false);
+      return;
     }
+
+    // 初期化を開始することを即座にマーク
+    hasInitialized.current = true;
+    setIsInitialized(true);
+
+    // 初期化プロミスを作成して、同時実行を防ぐ
+    const promise = (async () => {
+      try {
+        // まずCSRFトークンを取得（エラーが発生してもログに残すだけで続行）
+        try {
+          await import("@/shared/lib/api-client").then(({ apiClient }) =>
+            apiClient.get(`${API_CONFIG.baseURL}/sanctum/csrf-cookie`, {
+              withCredentials: true,
+            })
+          );
+        } catch (csrfError) {
+          console.warn(
+            "⚠️ CSRF初期化でエラーが発生しましたが、認証チェックを続行します:",
+            csrfError
+          );
+        }
+
+        const authResponse = await api.auth.me();
+        setUser(convertToUser(authResponse.data));
+      } catch (error: any) {
+        // 401エラー（未認証）は正常な状態なので、エラーレベルを下げる
+        if (error.response?.status === 401) {
+          // ユーザーは未認証（正常な状態）
+        } else {
+          console.error("❌ 認証状態の確認でエラーが発生しました:", error);
+        }
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+        setInitializationPromise(null);
+      }
+    })();
+
+    setInitializationPromise(promise);
+    await promise;
   };
 
   /**
    * パスワードリセット処理
    * 統一されたAPIクライアントを使用（将来的に実装予定）
    */
-  const forgotPassword = async (email: string) => {
+  const forgotPassword = async (_email: string) => {
     try {
-      console.log("パスワードリセット処理を開始します:", email);
       // TODO: APIクライアントにforgotPasswordメソッドを追加
       throw new Error("パスワードリセット機能は現在実装中です");
     } catch (error) {
@@ -149,66 +197,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   /**
-   * Google認証などでアクセストークンを保存し、認証状態を更新
-   */
-  const setToken = async (token: string) => {
-    localStorage.setItem("auth_token", token);
-    await checkAuth();
-  };
-
-  /**
-   * Google認証成功時にユーザー情報とトークンを同時に設定
-   */
-  const setUserAndToken = async (user: User, token: string) => {
-    console.log("setUserAndToken called:", { user, token });
-    localStorage.setItem("auth_token", token);
-    setUser(user);
-    setIsLoading(false); // ローディング状態を解除
-    console.log("ユーザー情報とトークンの設定が完了しました");
-  };
-
-  /**
    * 初期化時に認証状態をチェック
-   * 重複呼び出しを防ぐため初回のみ実行
+   * React Strict Mode対応：cleanup関数で重複実行を防ぐ
    */
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-
-    if (token) {
-      // トークンがある場合は、ユーザー情報の復元を試みる
-      checkAuth();
-    } else {
-      setIsLoading(false);
+    // hasInitialized.current で厳格にチェック
+    if (hasInitialized.current) {
+      return;
     }
+
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      if (!isMounted || hasInitialized.current) return;
+      await checkAuth();
+    };
+
+    initializeAuth();
+
+    // cleanup: コンポーネントがアンマウントされた場合はフラグを無効化
+    return () => {
+      isMounted = false;
+    };
   }, []); // 依存配列を空にして、初回のみ実行
-
-  /**
-   * トークンの存在確認
-   */
-  const hasToken = () => {
-    return !!localStorage.getItem("auth_token");
-  };
-
-  /**
-   * トークンの削除
-   */
-  const removeToken = () => {
-    localStorage.removeItem("auth_token");
-  };
 
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     isLoading,
-    login,
-    register,
-    logout,
+    signin,
+    signup,
+    signout,
     checkAuth,
     forgotPassword,
-    hasToken,
-    removeToken,
-    setToken, // 追加
-    setUserAndToken, // 新規追加
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

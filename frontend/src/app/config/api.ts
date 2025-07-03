@@ -17,13 +17,13 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // 認証関連
   auth: {
-    login: "/user/auth/login",
-    register: "/user/auth/register",
-    logout: "/user/auth/logout",
+    signin: "/user/auth/signin",
+    signup: "/user/auth/signup",
+    signout: "/user/auth/signout",
     me: "/user/auth/me",
     forgotPassword: "/user/auth/forgot-password",
     resetPassword: "/user/auth/reset-password",
-    csrf: "/auth/csrf-token",
+    csrf: "/sanctum/csrf-cookie", // Laravel Sanctum CSRF保護用
     // ソーシャルログイン関連
     social: {
       google: {
@@ -40,6 +40,7 @@ export const API_ENDPOINTS = {
   // 試合関連（認証済みユーザー用）
   matches: {
     list: "/matches", // 認証済みユーザー用の試合一覧
+    detail: (id: number) => `/matches/${id}`, // 試合詳細
   },
 
   // ゲスト用パブリックAPI
@@ -87,18 +88,14 @@ export interface ApiErrorResponse {
  * ソーシャルログインコールバック用の型定義
  */
 export interface SocialCallbackParams {
-  token?: string;
   error?: string;
   error_description?: string;
 }
 
 /**
- * ソーシャルログイン成功時のレスポンス型
+ * ソーシャルログイン成功時のレスポンス型（Cookie-based認証）
  */
 export interface SocialLoginResponse {
-  access_token: string;
-  token_type: "Bearer";
-  expires_in?: number;
   user: {
     id: number;
     name: string;

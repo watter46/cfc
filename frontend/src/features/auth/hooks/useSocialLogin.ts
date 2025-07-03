@@ -4,13 +4,13 @@ import { getWebUrl, API_ENDPOINTS } from "@/app/config/api";
 
 /**
  * ソーシャルログインのカスタムフック
- * 
+ *
  * このフックは以下の機能を提供します：
  * - Google OAuth認証への遷移処理
- * - X OAuth認証への遷移処理  
+ * - X OAuth認証への遷移処理
  * - ローディング状態の管理
  * - エラーハンドリング
- * 
+ *
  * @returns {Object} ソーシャルログインの状態と操作関数
  */
 export function useSocialLogin() {
@@ -24,8 +24,9 @@ export function useSocialLogin() {
   const handleGoogleLogin = useCallback(() => {
     try {
       setError(null);
-      const googleAuthUrl = getWebUrl(API_ENDPOINTS.auth.social.google.redirect);
-      console.log("Googleログイン開始:", googleAuthUrl);
+      const googleAuthUrl = getWebUrl(
+        API_ENDPOINTS.auth.social.google.redirect
+      );
       window.location.href = googleAuthUrl;
     } catch (err) {
       console.error("Google login error:", err);
@@ -45,7 +46,6 @@ export function useSocialLogin() {
           ENV_CONFIG.GOOGLE_REDIRECT_URI
         )}`
       );
-      console.log("Xログイン開始:", xAuthUrl);
       window.location.href = xAuthUrl;
     } catch (err) {
       console.error("X login error:", err);

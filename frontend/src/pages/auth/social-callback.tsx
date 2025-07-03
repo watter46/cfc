@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 
 /**
- * ソーシャルログイン認証コールバックページ
- * 責務：認証トークンの受け取り・保存・認証成功時の遷移のみ
+ * ソーシャルサインイン認証コールバックページ
+ * 責務：認証成功確認・認証成功時の遷移のみ
  */
 export function SocialCallback() {
   const [searchParams] = useSearchParams();
@@ -11,70 +12,54 @@ export function SocialCallback() {
   const [message, setMessage] = useState("認証プロトコル初期化中...");
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
+  const { checkAuth } = useAuth();
 
   useEffect(() => {
     const processAuth = async () => {
       try {
-        // URLクエリパラメータからトークンを取得
-        const token = searchParams.get("token");
-        const error = searchParams.get("error");
+        setMessage("認証状態確認中...");
 
-        // エラーがある場合
+        // クエリパラメータのエラーチェック（オプション）
+        const error = searchParams.get("error");
         if (error) {
           setIsError(true);
           setMessage("認証プロトコル失敗");
           setTimeout(() => {
-            navigate("/login", {
+            navigate("/signin", {
               state: {
-                error: `ソーシャルログインに失敗しました: ${error}`,
+                error: `ソーシャルサインインに失敗しました: ${error}`,
               },
             });
           }, 1500);
           return;
         }
 
-        // トークンがある場合
-        if (token) {
-          setMessage("認証システム接続中...");
+        // 認証状態を直接確認（Cookieベース）
+        setMessage("認証システム接続中...");
+        await checkAuth();
 
-          // トークンをlocalStorageに保存
-          localStorage.setItem("auth_token", token);
+        setIsSuccess(true);
+        setMessage("認証完了！システムにアクセス中...");
 
-          setIsSuccess(true);
-          setMessage("認証完了！システムにアクセス中...");
-
-          // 認証成功時は即座に試合ページに遷移
-          setTimeout(() => {
-            navigate("/matches", { replace: true });
-          }, 1500);
-        } else {
-          setIsError(true);
-          setMessage("アクセス拒否 - 認証データ不足");
-          setTimeout(() => {
-            navigate("/login", {
-              state: {
-                error: "認証パラメータが見つかりません",
-              },
-            });
-          }, 1500);
-        }
+        // 認証成功時は即座に試合ページに遷移
+        setTimeout(() => {
+          navigate("/matches", { replace: true });
+        }, 1500);
       } catch (error) {
         setIsError(true);
         setMessage("認証処理エラー");
         setTimeout(() => {
-          navigate("/login", {
+          navigate("/signin", {
             state: {
               error: "認証処理中にエラーが発生しました",
             },
           });
         }, 1500);
-      } finally {
-        // 処理完了
       }
     };
 
     processAuth();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, checkAuth]);
 
   return (
     <div

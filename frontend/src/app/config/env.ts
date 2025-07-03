@@ -12,6 +12,7 @@ interface EnvironmentVariables {
   NODE_ENV: "development" | "production" | "test";
   VITE_GOOGLE_CLIENT_ID: string; // GoogleクライアントID
   VITE_GOOGLE_REDIRECT_URI: string; // Google認証リダイレクトURI
+  VITE_USE_MOCK_DATA: string; // モックデータ使用フラグ
 }
 
 /**
@@ -67,8 +68,6 @@ export function validateEnvironment(): void {
     getEnvVar("VITE_BACKEND_URL", "http://localhost:8000");
     getEnvVar("VITE_GOOGLE_CLIENT_ID");
     getEnvVar("VITE_GOOGLE_REDIRECT_URI");
-
-    console.log("✅ Environment configuration validated successfully");
 
     if (ENV_CONFIG.enableApiLogging) {
       console.log("🔧 API Configuration:", {

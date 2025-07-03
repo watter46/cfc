@@ -106,7 +106,7 @@ export function handleSocialLoginError(
  */
 export function displaySocialLoginError(error: SocialLoginError): void {
   // ユーザー向けの簡潔なメッセージを表示
-  console.log(`❌ ${error.message}`);
+  console.error(`❌ ${error.message}`);
 
   // 開発環境では詳細情報も表示
   if (import.meta.env.DEV) {

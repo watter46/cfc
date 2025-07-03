@@ -1,36 +1,38 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { useLogin } from "../hooks/useAuthQuery";
-import { getErrorMessage } from "../utils/errorHandling";
+import { useAuth } from "../hooks/useAuth";
 import SocialLoginButtons from "./SocialLoginButtons";
+import { ErrorDisplay } from "@/shared/components/ui/ErrorDisplay";
+import { LoadingSpinner } from "@/shared/components/ui/LoadingSpinner";
 
-const LoginForm: React.FC = () => {
+const SigninForm: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<any>(null);
 
-  const loginMutation = useLogin();
+  const auth = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
     try {
-      await loginMutation.mutateAsync({ email, password });
-      // トークンは自動的にuseLoginフックで保存される
+      await auth.signin(email, password);
+      console.log("✅ ログイン成功、/matchesにリダイレクトします");
       navigate("/matches");
-    } catch (error) {
-      // エラーはuseLoginフックで自動的に処理される
-      console.error("Login failed:", error);
+    } catch (error: any) {
+      console.error("❌ ログイン失敗:", error);
+      setError(error);
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const errorMessage = loginMutation.error
-    ? getErrorMessage(loginMutation.error)
-    : "";
-  const isLoading = loginMutation.isPending;
 
   return (
     <div className="card-glass p-8 w-full max-w-md mx-auto">
@@ -38,10 +40,12 @@ const LoginForm: React.FC = () => {
         おかえりなさい
       </h2>
 
-      {errorMessage && (
-        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-md text-red-400 text-sm">
-          {errorMessage}
-        </div>
+      {error && (
+        <ErrorDisplay
+          error={error}
+          onRetry={() => setError(null)}
+          className="mb-4"
+        />
       )}
 
       <SocialLoginButtons />
@@ -114,8 +118,9 @@ const LoginForm: React.FC = () => {
           disabled={isLoading}
           className="btn btn-primary w-full py-3 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span className="relative z-10">
-            {isLoading ? "ログイン中..." : "ログイン"}
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            {isLoading && <LoadingSpinner size="sm" variant="default" />}
+            {isLoading ? "サインイン中..." : "サインイン"}
           </span>
           <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-neon-blue opacity-0 group-hover:opacity-100 transition-opacity"></span>
         </button>
@@ -123,7 +128,7 @@ const LoginForm: React.FC = () => {
 
       <p className="mt-6 text-center text-gray-400">
         アカウントをお持ちでないですか？{" "}
-        <Link to="/register" className="text-neon-blue hover:underline">
+        <Link to="/signup" className="text-neon-blue hover:underline">
           新規登録
         </Link>
       </p>
@@ -131,4 +136,4 @@ const LoginForm: React.FC = () => {
   );
 };
 
-export default LoginForm;
+export default SigninForm;

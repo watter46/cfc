@@ -1,6 +1,6 @@
 /**
  * 認証API用の型定義
- * Laravel Sanctum APIレスポンスの型安全性を保証
+ * Laravel Sanctum Cookie認証APIレスポンスの型安全性を保証
  */
 
 export interface ApiResponse<T = unknown> {
@@ -15,16 +15,17 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    email_verified_at?: string;
-    created_at?: string;
-    updated_at?: string;
+  data: {
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      email_verified_at?: string;
+      created_at?: string;
+      updated_at?: string;
+    };
   };
-  token: string; // トークンベース認証では必須
-  token_type?: string; // Bearer
+  message?: string;
 }
 
 export interface RegisterRequest {
@@ -35,15 +36,15 @@ export interface RegisterRequest {
 }
 
 export interface RegisterResponse {
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    created_at?: string;
-    updated_at?: string;
+  data: {
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      created_at?: string;
+      updated_at?: string;
+    };
   };
-  token: string; // トークンベース認証では必須
-  token_type?: string; // Bearer
   message?: string;
 }
 
@@ -63,47 +64,26 @@ export interface ApiError {
   code?: string;
 }
 
-export interface TokenInfo {
-  id: string;
-  name: string;
-  abilities: string[];
-  last_used_at?: string;
-  expires_at?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateTokenRequest {
-  name: string;
-  abilities?: string[];
-}
-
-export interface CreateTokenResponse {
-  token: string;
-  plainTextToken: string;
-  accessToken: TokenInfo;
-}
-
 /**
- * サイレント認証（/auth/user、/auth/me）のレスポンス型
- * 実際のバックエンドレスポンス：ユーザー情報のみ
+ * サイレント認証（/user/auth/me）のレスポンス型
+ * Cookie認証でのユーザー情報取得
  */
 export interface SilentAuthResponse {
-  id: string; // ULIDを使用
-  name: string;
-  email: string;
-  email_verified_at?: string;
-  created_at?: string;
-  updated_at?: string;
+  data: {
+    id: number;
+    name: string;
+    email: string;
+    email_verified_at?: string;
+    created_at?: string;
+    updated_at?: string;
+  };
 }
 
 /**
  * 完全な認証レスポンス型（ログイン・新規登録時）
- * バックエンドから返される形式：{ token, token_type, user }
+ * Cookie-based認証では、userオブジェクトのみを返す
  */
 export interface FullAuthResponse {
-  token: string;
-  token_type: string; // 'Bearer'
   user: {
     id: string;
     name: string;

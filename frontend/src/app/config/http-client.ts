@@ -141,7 +141,6 @@ export const apiMethods = {
 export async function initializeCsrfToken(): Promise<void> {
   try {
     await httpClient.get("/csrf-token");
-    console.log("✅ CSRF token initialized");
   } catch (error) {
     console.warn("⚠️ Failed to initialize CSRF token:", error);
   }
