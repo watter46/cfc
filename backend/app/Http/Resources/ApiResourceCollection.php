@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Pagination\AbstractPaginator;
+use Illuminate\Pagination\Paginator;
 
 class ApiResourceCollection extends ResourceCollection
 {
@@ -62,7 +64,17 @@ class ApiResourceCollection extends ResourceCollection
         }
 
         // ページネーション情報がある場合は追加
-        if ($this->resource->resource instanceof \Illuminate\Pagination\AbstractPaginator) {
+        if ($this->resource instanceof Paginator) {
+            // Simple Paginateの場合（total()やlastPage()は使用不可）
+            $response['meta']['pagination'] = [
+                'count'        => $this->resource->count(),
+                'per_page'     => $this->resource->perPage(),
+                'current_page' => $this->resource->currentPage(),
+                'has_more'     => $this->resource->hasMorePages(),
+                'path'         => $this->resource->path(),
+            ];
+        } elseif ($this->resource instanceof AbstractPaginator) {
+            // 通常のPaginateの場合
             $response['meta']['pagination'] = [
                 'total'        => $this->resource->total(),
                 'count'        => $this->resource->count(),
