@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models\Builders;
 
+use App\Models\Season;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use RuntimeException;
 
 final class GameBuilder extends Builder
 {
@@ -20,13 +22,74 @@ final class GameBuilder extends Builder
     }
 
     /**
+     * 指定の年でフィルタリングする
+     *
+     * @throws RuntimeException 指定のシーズンが存在しない場合
+     */
+    public function byYear(?int $year): self
+    {
+        if ($year === null) {
+            return $this->currentSeason();
+        }
+
+        $season = Season::select('id')->where('year', $year)->first();
+
+        if ($season === null) {
+            throw new RuntimeException('指定のシーズンが存在しません');
+        }
+
+        return $this->where('season_id', $season->id);
+    }
+
+    /**
+     * 現在のシーズンの試合を取得する
+     *
+     * @throws RuntimeException 現在のシーズンが存在しない場合
+     */
+    public function currentSeason(): self
+    {
+        $currentSeason = Season::select('id')->current()->first();
+
+        if ($currentSeason === null) {
+            throw new RuntimeException('現在のシーズンが存在しません');
+        }
+
+        return $this->where('season_id', $currentSeason->id);
+    }
+
+    /**
+     * シーズンIDでフィルタリングする
+     */
+    public function bySeasonId(?int $seasonId): self
+    {
+        if ($seasonId === null) {
+            return $this->currentSeason();
+        }
+
+        return $this->where('season_id', $seasonId);
+    }
+
+    /**
+     * チームIDでフィルタリングする
+     */
+    public function byTeamId(int $teamId): self
+    {
+        return $this->where(function ($query) use ($teamId) {
+            $query->where('home_team_id', $teamId)
+                ->orWhere('away_team_id', $teamId);
+        });
+    }
+
+    /**
      * リーグIDでフィルタリングする
      */
-    public function byLeague(?int $leagueId = null): self
+    public function byLeagueId(?int $leagueId): self
     {
-        return $leagueId
-            ? $this->where('league_id', $leagueId)
-            : $this;
+        if ($leagueId === null) {
+            return $this;
+        }
+
+        return $this->where('league_id', $leagueId);
     }
 
     /**

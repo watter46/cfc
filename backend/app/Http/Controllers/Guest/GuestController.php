@@ -15,7 +15,11 @@ final class GuestController extends ApiController
 {
     public function index(FetchLatestFinishedGames $fetchLatestFinishedGames)
     {
-        return new LatestFinishedGamesCollection($fetchLatestFinishedGames());
+        $collection = new LatestFinishedGamesCollection($fetchLatestFinishedGames());
+
+        return $collection
+            ->setMessage('最新の試合一覧を取得しました')
+            ->setSuccess(true);
     }
 
     public function dev(SyncGamesAction $syncGamesAction)

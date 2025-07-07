@@ -10,35 +10,40 @@ import type {
 } from "../types/api";
 
 /**
- * トークンベース認証のユーティリティ関数
+ * Cookie認証のユーティリティ関数
+ * Sanctum Cookie認証で注意すべきポイント：
+ * 1. withCredentials: true でCookieを自動送信
+ * 2. CSRF保護の実装
+ * 3. ドメイン/サブドメインの一致
+ * 4. HTTPSでの本番運用（secure cookies）
  */
-export const authTokenUtils = {
+export const authCookieUtils = {
   /**
-   * トークンを取得
+   * 認証状態のチェック（Cookie認証では常にサーバーに確認）
+   * エンドポイント: /user/auth/me
    */
-  getToken: (): string | null => {
-    return localStorage.getItem("auth_token");
+  checkAuth: async (): Promise<boolean> => {
+    try {
+      await api.auth.me();
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   /**
-   * トークンを保存
+   * CSRF保護のための事前準備
+   * 認証が必要な操作の前に必ず呼び出す
+   * Sanctum標準エンドポイント: /sanctum/csrf-cookie
    */
-  setToken: (token: string): void => {
-    localStorage.setItem("auth_token", token);
-  },
-
-  /**
-   * トークンを削除
-   */
-  removeToken: (): void => {
-    localStorage.removeItem("auth_token");
-  },
-
-  /**
-   * トークンが存在するかチェック
-   */
-  hasToken: (): boolean => {
-    return !!localStorage.getItem("auth_token");
+  ensureCsrfToken: async (): Promise<void> => {
+    try {
+      const { apiClient } = await import("@/shared/lib/api-client");
+      const { getWebUrl, API_ENDPOINTS } = await import("@/app/config/api");
+      await apiClient.get(getWebUrl(API_ENDPOINTS.auth.csrf));
+    } catch (error) {
+      console.warn("CSRF token取得に失敗:", error);
+    }
   },
 };
 
@@ -51,63 +56,81 @@ export function useCurrentUser() {
     queryFn: () => api.auth.me(),
     staleTime: 30 * 60 * 1000, // 30分間はキャッシュを新鮮として扱う
     retry: false, // 認証エラーの場合は再試行しない
-    enabled: authTokenUtils.hasToken(), // トークンがある場合のみ実行
+    // Cookie認証では常に実行可能
   });
 }
 
 /**
- * ログイン処理のためのカスタムフック
+ * サインイン処理のためのカスタムフック
+ * Sanctum Cookie認証では事前のCSRF準備が重要
  */
-export function useLogin() {
+export function useSignin() {
   const queryClient = useQueryClient();
 
   return useMutation<LoginResponse, ApiError, LoginRequest>({
-    mutationFn: (credentials: LoginRequest) => api.auth.login(credentials),
-    onSuccess: (data) => {
-      // トークンをローカルストレージに保存
-      authTokenUtils.setToken(data.token);
-      // ログイン成功時にユーザー情報を再取得
+    mutationFn: async (credentials: LoginRequest) => {
+      // Sanctumでは認証前にCSRFトークンの取得が必要
+      await authCookieUtils.ensureCsrfToken();
+      return api.auth.signin(credentials);
+    },
+    onSuccess: () => {
+      // Cookie認証では自動的にCookieが設定される
+      // サインイン成功時にユーザー情報を再取得
       queryClient.invalidateQueries({ queryKey: ["user", "current"] });
+    },
+    onError: (error) => {
+      // 401/419エラー（CSRF関連）の場合は特別処理を検討
+      if (error.status === 419) {
+        console.warn("CSRF token mismatch. 再度トークンを取得してください。");
+      }
     },
   });
 }
 
 /**
- * ユーザー登録処理のためのカスタムフック
+ * サインアップ処理のためのカスタムフック
+ * Sanctum Cookie認証では事前のCSRF準備が重要
  */
-export function useRegister() {
+export function useSignup() {
   const queryClient = useQueryClient();
 
   return useMutation<RegisterResponse, ApiError, RegisterRequest>({
-    mutationFn: (userData: RegisterRequest) => api.auth.register(userData),
-    onSuccess: (data) => {
-      // トークンをローカルストレージに保存
-      authTokenUtils.setToken(data.token);
-      // 登録成功時にユーザー情報を再取得
+    mutationFn: async (userData: RegisterRequest) => {
+      // Sanctumでは認証前にCSRFトークンの取得が必要
+      await authCookieUtils.ensureCsrfToken();
+      return api.auth.signup(userData);
+    },
+    onSuccess: () => {
+      // Cookie認証では自動的にCookieが設定される
+      // サインアップ成功時にユーザー情報を再取得
       queryClient.invalidateQueries({ queryKey: ["user", "current"] });
+    },
+    onError: (error) => {
+      // 401/419エラー（CSRF関連）の場合は特別処理を検討
+      if (error.status === 419) {
+        console.warn("CSRF token mismatch. 再度トークンを取得してください。");
+      }
     },
   });
 }
 
 /**
- * ログアウト処理のためのカスタムフック
+ * サインアウト処理のためのカスタムフック
  */
-export function useLogout() {
+export function useSignout() {
   const queryClient = useQueryClient();
 
   return useMutation<void, ApiError, void>({
     mutationFn: async (): Promise<void> => {
-      await api.auth.logout();
+      await api.auth.signout();
     },
     onSuccess: () => {
-      // トークンをローカルストレージから削除
-      authTokenUtils.removeToken();
-      // ログアウト成功時にすべてのキャッシュをクリア
+      // Cookie認証では自動的にCookieが削除される
+      // サインアウト成功時にすべてのキャッシュをクリア
       queryClient.clear();
     },
     onError: () => {
-      // エラーが発生してもトークンは削除
-      authTokenUtils.removeToken();
+      // エラーが発生してもキャッシュをクリア
       queryClient.clear();
     },
   });
@@ -119,9 +142,9 @@ export function useLogout() {
  */
 export function useAuthQuery() {
   const userQuery = useCurrentUser();
-  const loginMutation = useLogin();
-  const registerMutation = useRegister();
-  const logoutMutation = useLogout();
+  const signinMutation = useSignin();
+  const signupMutation = useSignup();
+  const signoutMutation = useSignout();
 
   return {
     // ユーザー情報
@@ -129,18 +152,18 @@ export function useAuthQuery() {
     isLoading: userQuery.isLoading,
     isAuthenticated: !!userQuery.data && !userQuery.error,
 
-    // ログイン関連
-    login: loginMutation.mutate,
-    loginError: loginMutation.error,
-    isLoggingIn: loginMutation.isPending,
+    // サインイン関連
+    signin: signinMutation.mutate,
+    signinError: signinMutation.error,
+    isSigningIn: signinMutation.isPending,
 
-    // 登録関連
-    register: registerMutation.mutate,
-    registerError: registerMutation.error,
-    isRegistering: registerMutation.isPending,
+    // サインアップ関連
+    signup: signupMutation.mutate,
+    signupError: signupMutation.error,
+    isSigningUp: signupMutation.isPending,
 
-    // ログアウト関連
-    logout: logoutMutation.mutate,
-    isLoggingOut: logoutMutation.isPending,
+    // サインアウト関連
+    signout: signoutMutation.mutate,
+    isSigningOut: signoutMutation.isPending,
   };
 }

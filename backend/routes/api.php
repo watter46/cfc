@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\Guest\GuestController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Guest\GuestController;
+use App\Http\Controllers\User\GameController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [GuestController::class, 'index']);
@@ -12,19 +13,18 @@ Route::get('/find', [GuestController::class, 'find']);
 
 // 認証不要なルート
 Route::prefix('user/auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/signup', [AuthController::class, 'signup']);
+    Route::post('/signin', [AuthController::class, 'signin']);
 });
 
 // 認証が必要なルート
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('user/auth')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/signout', [AuthController::class, 'signout']);
         Route::get('/me', [AuthController::class, 'me']);
     });
-    
-    // マッチ関連のルート
-    Route::get('/matches', function () {
-        return response()->json(['message' => 'success2']);
-    });
+
+    // ゲーム関連のルート
+    Route::get('/matches', [GameController::class, 'index']);
+    Route::get('/matches/{id}', [GameController::class, 'show']);
 });

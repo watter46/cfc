@@ -38,6 +38,15 @@ final class GameUser extends Model
     }
 
     /**
+     * モデルのデフォルト属性値
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_rated' => false,
+    ];
+
+    /**
      * 関連するユーザーを取得
      */
     public function user(): BelongsTo

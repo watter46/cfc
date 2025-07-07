@@ -1,20 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../features/auth/hooks/useAuth";
-import { LogOut, User, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 const Header: React.FC = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, signout } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
-  const handleLogout = async () => {
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      if (currentY < 32) {
+        setIsHeaderVisible(true);
+        lastScrollY.current = currentY;
+        return;
+      }
+      if (currentY > lastScrollY.current) {
+        // Down: 隠す
+        setIsHeaderVisible(false);
+      } else if (currentY < lastScrollY.current) {
+        // Up: 表示
+        setIsHeaderVisible(true);
+      }
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleSignout = async () => {
     try {
-      await logout();
+      await signout();
       navigate("/");
       setIsMobileMenuOpen(false);
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Signout failed:", error);
     }
   };
 
@@ -22,13 +46,22 @@ const Header: React.FC = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  const handleMobileItemClick = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    <header className="bg-space-900/95 backdrop-blur-sm border-b border-space-700/50 sticky top-0 z-50">
+    <header
+      className={`bg-space-900/95 backdrop-blur-sm border-b border-space-700/50 sticky top-0 z-50 transition-transform duration-300 ${
+        isHeaderVisible ? "translate-y-0" : "-translate-y-full"
+      }`}
+      role="banner"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo - Left side */}
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0">
+            <Link to="/" className="flex-shrink-0" aria-label="ホームへ戻る">
               <span className="text-neon-blue font-bold text-2xl sm:text-3xl tracking-wider hover:text-neon-purple transition-colors">
                 CFC<span className="text-neon-green">Rating</span>
               </span>
@@ -36,81 +69,60 @@ const Header: React.FC = () => {
           </div>
 
           {/* Desktop Navigation - Right side */}
-          <div className="hidden md:flex items-center space-x-4">
+          <nav
+            className="hidden md:flex items-center space-x-4"
+            aria-label="メインナビゲーション"
+            role="navigation"
+          >
             {isAuthenticated ? (
-              <>
-                {/* Matches link */}
+              <div className="flex space-x-4">
                 <Link
                   to="/matches"
-                  className="px-3 py-2 text-gray-300 hover:text-neon-blue transition-colors font-medium"
+                  className="text-neon-blue hover:text-neon-purple"
                 >
-                  試合一覧
+                  Matches
                 </Link>
-
-                {/* User info */}
-                <div className="flex items-center space-x-3">
-                  <span className="text-gray-300 text-sm">
-                    こんにちは、
-                    <span className="text-neon-blue font-medium">
-                      {user?.name}
-                    </span>
-                    さん
-                  </span>
-                </div>
-
-                {/* Profile button */}
                 <Link
                   to="/profile"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-300 hover:text-neon-blue hover:bg-space-800/50 transition-all duration-200"
+                  className="text-neon-green hover:text-neon-purple"
                 >
-                  <User size={18} />
-                  <span>プロフィール</span>
+                  Profile
                 </Link>
-
-                {/* Auth Test button */}
-                <Link
-                  to="/auth-test"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-300 hover:text-neon-purple hover:bg-space-800/50 transition-all duration-200"
-                >
-                  <span>🔧</span>
-                  <span>認証テスト</span>
-                </Link>
-
-                {/* Logout button */}
                 <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-300 hover:text-neon-red hover:bg-space-800/50 transition-all duration-200"
+                  onClick={handleSignout}
+                  className="text-neon-red hover:text-neon-purple"
                 >
-                  <LogOut size={18} />
-                  <span>ログアウト</span>
+                  Signout
                 </button>
-              </>
+              </div>
             ) : (
-              <>
-                {/* Login button */}
+              <div className="flex space-x-4">
                 <Link
-                  to="/login"
-                  className="px-4 py-2 text-gray-300 hover:text-neon-blue transition-colors font-medium"
+                  to="/signin"
+                  className="text-neon-blue hover:text-neon-purple"
                 >
-                  ログイン
+                  Signin
                 </Link>
-
-                {/* Sign up button */}
                 <Link
-                  to="/register"
-                  className="btn btn-primary px-4 py-2 text-sm font-medium bg-neon-blue hover:bg-neon-purple text-white rounded-md transition-all duration-200 shadow-lg hover:shadow-neon-blue"
+                  to="/signup"
+                  className="text-neon-green hover:text-neon-purple"
                 >
-                  サインアップ
+                  Signup
                 </Link>
-              </>
+              </div>
             )}
-          </div>
+          </nav>
 
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               onClick={toggleMobileMenu}
-              className="p-2 rounded-md text-gray-300 hover:text-neon-blue hover:bg-space-800/50 transition-all duration-200"
+              className="p-2 rounded-md text-gray-300 hover:text-neon-blue hover:bg-space-800/50 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-blue"
+              aria-label={
+                isMobileMenuOpen ? "メニューを閉じる" : "メニューを開く"
+              }
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-menu"
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -119,70 +131,56 @@ const Header: React.FC = () => {
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-space-700/50 bg-space-900/95 backdrop-blur-sm">
+          <nav
+            id="mobile-menu"
+            className="md:hidden border-t border-space-700/50 bg-space-900/95 backdrop-blur-sm"
+            aria-label="モバイルナビゲーション"
+            role="navigation"
+          >
             <div className="px-2 pt-2 pb-3 space-y-1">
               {isAuthenticated ? (
-                <>
-                  {/* User info mobile */}
-                  <div className="px-3 py-2 text-gray-300 text-sm border-b border-space-700/50 mb-2">
-                    こんにちは、
-                    <span className="text-neon-blue font-medium">
-                      {user?.name}
-                    </span>
-                    さん
-                  </div>
-
-                  {/* Matches link mobile */}
+                <div className="space-y-1">
                   <Link
                     to="/matches"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-3 py-2 rounded-md text-gray-300 hover:text-neon-blue hover:bg-space-800/50 transition-all duration-200"
+                    onClick={handleMobileItemClick}
+                    className="block text-neon-blue hover:text-neon-purple"
                   >
-                    試合一覧
+                    Matches
                   </Link>
-
-                  {/* Profile link mobile */}
                   <Link
                     to="/profile"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-gray-300 hover:text-neon-blue hover:bg-space-800/50 transition-all duration-200"
+                    onClick={handleMobileItemClick}
+                    className="block text-neon-green hover:text-neon-purple"
                   >
-                    <User size={18} />
-                    <span>プロフィール</span>
+                    Profile
                   </Link>
-
-                  {/* Logout button mobile */}
                   <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center space-x-2 px-3 py-2 rounded-md text-gray-300 hover:text-neon-red hover:bg-space-800/50 transition-all duration-200"
+                    onClick={handleSignout}
+                    className="block text-neon-red hover:text-neon-purple"
                   >
-                    <LogOut size={18} />
-                    <span>ログアウト</span>
+                    Signout
                   </button>
-                </>
+                </div>
               ) : (
-                <>
-                  {/* Login link mobile */}
+                <div className="space-y-1">
                   <Link
-                    to="/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-3 py-2 rounded-md text-gray-300 hover:text-neon-blue hover:bg-space-800/50 transition-all duration-200"
+                    to="/signin"
+                    onClick={handleMobileItemClick}
+                    className="block text-neon-blue hover:text-neon-purple"
                   >
-                    ログイン
+                    Signin
                   </Link>
-
-                  {/* Sign up link mobile */}
                   <Link
-                    to="/register"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-3 py-2 bg-neon-blue hover:bg-neon-purple text-white rounded-md transition-all duration-200 text-center font-medium"
+                    to="/signup"
+                    onClick={handleMobileItemClick}
+                    className="block text-neon-green hover:text-neon-purple"
                   >
-                    サインアップ
+                    Signup
                   </Link>
-                </>
+                </div>
               )}
             </div>
-          </div>
+          </nav>
         )}
       </div>
     </header>

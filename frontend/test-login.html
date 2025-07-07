@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ログインテスト</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #1a1a2e;
+        color: white;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #333;
+        background: #2a2a3e;
+        color: white;
+        border-radius: 4px;
+      }
+      button {
+        background: #0066cc;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .output {
+        margin-top: 20px;
+        padding: 15px;
+        background: #2a2a3e;
+        border-radius: 4px;
+        white-space: pre-wrap;
+      }
+      .error {
+        color: #ff6b6b;
+      }
+      .success {
+        color: #51cf66;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>認証フローテスト</h1>
+
+    <div class="form-group">
+      <label for="email">メールアドレス:</label>
+      <input type="email" id="email" value="test@example.com" />
+    </div>
+
+    <div class="form-group">
+      <label for="password">パスワード:</label>
+      <input type="password" id="password" value="password123" />
+    </div>
+
+    <button onclick="testLogin()">ログインテスト</button>
+    <button onclick="testMe()">認証状態確認</button>
+    <button onclick="testSignout()">ログアウト</button>
+    <button onclick="clearOutput()">クリア</button>
+
+    <div id="output" class="output"></div>
+
+    <script>
+      const API_BASE = "http://localhost:8000";
+      let output = document.getElementById("output");
+
+      function log(message, type = "info") {
+        const timestamp = new Date().toLocaleTimeString();
+        const className =
+          type === "error" ? "error" : type === "success" ? "success" : "";
+        output.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+        output.scrollTop = output.scrollHeight;
+      }
+
+      function clearOutput() {
+        output.innerHTML = "";
+      }
+
+      // CSRF トークン取得
+      async function getCsrfToken() {
+        try {
+          log("CSRF トークンを取得中...");
+          const response = await fetch(`${API_BASE}/sanctum/csrf-cookie`, {
+            method: "GET",
+            credentials: "include",
+          });
+          log("CSRF トークン取得完了", "success");
+          return true;
+        } catch (error) {
+          log(`CSRF エラー: ${error.message}`, "error");
+          return false;
+        }
+      }
+
+      async function testLogin() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        try {
+          // CSRF取得
+          await getCsrfToken();
+
+          log(`ログイン試行: ${email}`);
+          const response = await fetch(`${API_BASE}/api/user/auth/signin`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            credentials: "include",
+            body: JSON.stringify({ email, password }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            log(`ログイン成功: ${JSON.stringify(data, null, 2)}`, "success");
+          } else {
+            const error = await response.text();
+            log(`ログイン失敗 (${response.status}): ${error}`, "error");
+          }
+        } catch (error) {
+          log(`ログインエラー: ${error.message}`, "error");
+        }
+      }
+
+      async function testMe() {
+        try {
+          log("認証状態を確認中...");
+          const response = await fetch(`${API_BASE}/api/user/auth/me`, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            credentials: "include",
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            log(`認証状態: ${JSON.stringify(data, null, 2)}`, "success");
+          } else {
+            const error = await response.text();
+            log(`認証確認失敗 (${response.status}): ${error}`, "error");
+          }
+        } catch (error) {
+          log(`認証確認エラー: ${error.message}`, "error");
+        }
+      }
+
+      async function testSignout() {
+        try {
+          log("ログアウト中...");
+          const response = await fetch(`${API_BASE}/api/user/auth/signout`, {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            credentials: "include",
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            log(`ログアウト成功: ${JSON.stringify(data, null, 2)}`, "success");
+          } else {
+            const error = await response.text();
+            log(`ログアウト失敗 (${response.status}): ${error}`, "error");
+          }
+        } catch (error) {
+          log(`ログアウトエラー: ${error.message}`, "error");
+        }
+      }
+
+      // 初期化時に認証状態をチェック
+      window.addEventListener("load", () => {
+        log("テストページ読み込み完了");
+        testMe();
+      });
+    </script>
+  </body>
+</html>

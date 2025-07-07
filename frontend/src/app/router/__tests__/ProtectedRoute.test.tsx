@@ -9,39 +9,52 @@ vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => mockUseAuth(),
 }));
 
-// localStorageをモック化
-const mockLocalStorage = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
-
-Object.defineProperty(window, 'localStorage', {
-  value: mockLocalStorage,
-});
-
 /**
  * テスト用のRouterプロバイダー
  */
-function TestRouterProvider({ 
-  children, 
-  initialEntries = ["/matches"] 
-}: { 
+function TestRouterProvider({
+  children,
+  initialEntries = ["/matches"],
+}: {
   children: React.ReactNode;
   initialEntries?: string[];
 }) {
-  return <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>;
+  return (
+    <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
+  );
 }
 
 describe("ProtectedRoute", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockLocalStorage.getItem.mockReturnValue(null);
   });
 
-  it("トークンがない場合はローディングではなく、リダイレクトが発生する", () => {
-    mockLocalStorage.getItem.mockReturnValue(null);
+  it("未認証ユーザーは認証状態チェック中にローディングを表示する", () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: true,
+      user: null,
+    });
+
+    render(
+      <TestRouterProvider>
+        <ProtectedRoute>
+          <div>認証済みコンテンツ</div>
+        </ProtectedRoute>
+      </TestRouterProvider>
+    );
+
+    // 認証済みコンテンツは表示されず、ローディング状態であることを確認
+    expect(screen.queryByText("認証済みコンテンツ")).not.toBeInTheDocument();
+    expect(document.querySelector(".min-h-screen")).toBeInTheDocument();
+  });
+
+  it("未認証ユーザーはログインページにリダイレクトされる", () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+    });
 
     render(
       <TestRouterProvider>
@@ -55,8 +68,12 @@ describe("ProtectedRoute", () => {
     expect(screen.queryByText("認証済みコンテンツ")).not.toBeInTheDocument();
   });
 
-  it("トークンがある場合はコンテンツを表示する", () => {
-    mockLocalStorage.getItem.mockReturnValue("valid-token");
+  it("認証済みユーザーはコンテンツを表示する", () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: 1, name: "Test User", email: "test@example.com" },
+    });
 
     render(
       <TestRouterProvider>
@@ -70,49 +87,12 @@ describe("ProtectedRoute", () => {
     expect(screen.getByText("認証済みコンテンツ")).toBeInTheDocument();
   });
 
-  it("トークンがない場合はコンソールログが出力される", () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-    mockLocalStorage.getItem.mockReturnValue(null);
-
-    render(
-      <TestRouterProvider>
-        <ProtectedRoute>
-          <div>認証済みコンテンツ</div>
-        </ProtectedRoute>
-      </TestRouterProvider>
-    );
-
-    // リダイレクトログが出力されることを確認
-    expect(consoleSpy).toHaveBeenCalledWith(
-      "トークンがないため、ログインページにリダイレクト"
-    );
-
-    consoleSpy.mockRestore();
-  });
-
-  it("トークンがある場合はコンソールログが出力される", () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-    mockLocalStorage.getItem.mockReturnValue("valid-token");
-
-    render(
-      <TestRouterProvider>
-        <ProtectedRoute>
-          <div>認証済みコンテンツ</div>
-        </ProtectedRoute>
-      </TestRouterProvider>
-    );
-
-    // 成功ログが出力されることを確認
-    expect(consoleSpy).toHaveBeenCalledWith(
-      "トークンが存在するため、保護されたコンテンツを表示"
-    );
-
-    consoleSpy.mockRestore();
-  });
-
-  it("異なるパスから/loginへのリダイレクト", () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-    mockLocalStorage.getItem.mockReturnValue(null);
+  it("異なるパスから未認証ユーザーは/signinへのリダイレクト", () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+    });
 
     render(
       <TestRouterProvider initialEntries={["/protected-page"]}>
@@ -124,13 +104,6 @@ describe("ProtectedRoute", () => {
 
     // 保護されたコンテンツは表示されないことを確認
     expect(screen.queryByText("保護されたページ")).not.toBeInTheDocument();
-    
-    // ログが出力されることを確認
-    expect(consoleSpy).toHaveBeenCalledWith(
-      "トークンがないため、ログインページにリダイレクト"
-    );
-
-    consoleSpy.mockRestore();
   });
 });
 
@@ -156,7 +129,7 @@ describe("AuthGuard", () => {
     // ローディングスピナーが表示されることを確認
     expect(screen.queryByText("未認証用コンテンツ")).not.toBeInTheDocument();
     // ローディング状態を確認するために、コンテナの存在を確認
-    expect(document.querySelector('.min-h-screen')).toBeInTheDocument();
+    expect(document.querySelector(".min-h-screen")).toBeInTheDocument();
   });
 
   it("未認証ユーザーにはコンテンツを表示する", () => {

@@ -19,6 +19,7 @@ final class DatabaseSeeder extends Seeder
             GameSeeder::class,
             PlayerSeeder::class,
             GamePlayerSeeder::class,
+            MyClubSeeder::class,
         ]);
     }
 }

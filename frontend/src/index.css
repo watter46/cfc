@@ -6,6 +6,9 @@
   --color-space-800: #1e293b;
   --color-space-700: #334155;
   --color-space-600: #475569;
+  --color-space-500: #64748b;
+  --color-space-400: #94a3b8;
+  --color-space-300: #cbd5e1;
 
   --color-neon-blue: #0ea5e9;
   --color-neon-purple: #8b5cf6;
@@ -88,6 +91,8 @@
     box-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
     animation: glow 2s ease-in-out infinite alternate;
   }
+
+  /* 汎用的なアニメーション（複数コンポーネントで使用） */
 }
 
 /* Custom animation for player rating stars */
@@ -100,19 +105,6 @@
   50% {
     transform: scale(1.1);
     opacity: 1;
-  }
-}
-
-/* カードヘッダー用の長い間隔のアニメーション */
-@keyframes slow-pulse-glow {
-  0%,
-  100% {
-    opacity: 0.3;
-    filter: brightness(0.8);
-  }
-  50% {
-    opacity: 0.6;
-    filter: brightness(1.2);
   }
 }
 
@@ -206,5 +198,205 @@
   /* 遅いpulseアニメーション */
   .animate-pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* 回転するネオングリーンボーダーアニメーション */
+  .animate-border-glow {
+    animation: border-glow 2s linear infinite;
+  }
+
+  /* 流れ星のような粒が動くボーダーアニメーション */
+  .animate-border-particles {
+    position: relative;
+    border: 2px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .animate-border-particles::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, transparent, #10b981, transparent);
+    border-radius: inherit;
+    animation: border-particle-flow 3s linear infinite;
+    z-index: -1;
+  }
+
+  .animate-border-particles::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(
+      -45deg,
+      transparent,
+      rgba(16, 185, 129, 0.6),
+      transparent
+    );
+    border-radius: inherit;
+    animation: border-particle-flow 3s linear infinite reverse;
+    z-index: -1;
+  }
+}
+
+/* アニメーションキーフレーム定義 */
+@keyframes slow-pulse-glow {
+  0%,
+  100% {
+    opacity: 0.8;
+    filter: blur(3px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(1px);
+  }
+}
+
+@keyframes border-glow {
+  0% {
+    box-shadow:
+      0 0 5px #10b981,
+      0 0 10px #10b981,
+      0 0 15px #10b981,
+      inset 0 0 5px rgba(16, 185, 129, 0.2);
+  }
+  25% {
+    box-shadow:
+      5px 0 5px #10b981,
+      10px 0 10px #10b981,
+      15px 0 15px #10b981,
+      inset 5px 0 5px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 5px 5px #10b981,
+      0 10px 10px #10b981,
+      0 15px 15px #10b981,
+      inset 0 5px 5px rgba(16, 185, 129, 0.2);
+  }
+  75% {
+    box-shadow:
+      -5px 0 5px #10b981,
+      -10px 0 10px #10b981,
+      -15px 0 15px #10b981,
+      inset -5px 0 5px rgba(16, 185, 129, 0.2);
+  }
+  100% {
+    box-shadow:
+      0 0 5px #10b981,
+      0 0 10px #10b981,
+      0 0 15px #10b981,
+      inset 0 0 5px rgba(16, 185, 129, 0.2);
+  }
+}
+
+@keyframes border-particle-flow {
+  0% {
+    transform: rotate(0deg) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes star-particle-orbit {
+  0% {
+    transform: rotate(0deg);
+    filter: brightness(0.8) blur(0px);
+  }
+  10% {
+    transform: rotate(36deg);
+    filter: brightness(1.3) blur(0.5px);
+  }
+  20% {
+    transform: rotate(72deg);
+    filter: brightness(1.6) blur(0px);
+  }
+  30% {
+    transform: rotate(108deg);
+    filter: brightness(1.1) blur(0.3px);
+  }
+  40% {
+    transform: rotate(144deg);
+    filter: brightness(0.9) blur(1px);
+  }
+  50% {
+    transform: rotate(180deg);
+    filter: brightness(1.2) blur(0px);
+  }
+  60% {
+    transform: rotate(216deg);
+    filter: brightness(1.4) blur(0.2px);
+  }
+  70% {
+    transform: rotate(252deg);
+    filter: brightness(1) blur(0.8px);
+  }
+  80% {
+    transform: rotate(288deg);
+    filter: brightness(1.5) blur(0px);
+  }
+  90% {
+    transform: rotate(324deg);
+    filter: brightness(1.1) blur(0.4px);
+  }
+  100% {
+    transform: rotate(360deg);
+    filter: brightness(0.8) blur(0px);
+  }
+}
+
+@keyframes slingshot-orbit {
+  0% {
+    transform: rotate(0deg);
+    filter: brightness(0.8);
+  }
+  15% {
+    transform: rotate(54deg);
+    filter: brightness(1.2);
+  }
+  25% {
+    transform: rotate(90deg);
+    filter: brightness(1.5);
+  }
+  35% {
+    transform: rotate(126deg);
+    filter: brightness(1.2);
+  }
+  50% {
+    transform: rotate(180deg);
+    filter: brightness(0.9);
+  }
+  65% {
+    transform: rotate(234deg);
+    filter: brightness(1.1);
+  }
+  75% {
+    transform: rotate(270deg);
+    filter: brightness(1.4);
+  }
+  85% {
+    transform: rotate(306deg);
+    filter: brightness(1.1);
+  }
+  100% {
+    transform: rotate(360deg);
+    filter: brightness(0.8);
   }
 }

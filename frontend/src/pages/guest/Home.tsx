@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Star, Trophy, Share2, Bug } from "lucide-react";
+import { ArrowRight, Star, Trophy, Share2 } from "lucide-react";
 import MainLayout from "@/shared/components/layout/MainLayout.tsx";
 import PublicMatchCard from "@/features/matches/components/guest/PublicMatchCard.tsx";
 import { useGuestRecentMatches } from "@/features/matches/hooks/guest/useGuestMatches.ts";
@@ -54,7 +54,7 @@ const GuestHomePage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/register"
+                to="/signup"
                 className="btn btn-primary py-3 px-8 text-lg relative overflow-hidden group"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
@@ -190,19 +190,6 @@ const GuestHomePage: React.FC = () => {
             >
               無料でアカウント作成
             </a>
-
-            {/* 開発環境でのAPIテストリンク */}
-            {import.meta.env.DEV && (
-              <div className="mt-4">
-                <Link
-                  to="/api-test"
-                  className="text-neon-blue hover:underline flex items-center gap-1.5 text-sm"
-                >
-                  <Bug size={16} />
-                  <span>API接続テスト（開発用）</span>
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       </section>

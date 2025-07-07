@@ -72,6 +72,21 @@ final class InsertJsonRepository extends JsonRepository
         return $this->get('insert', 'player_statistics');
     }
 
+    public function getMyClubs()
+    {
+        return $this->get('insert', 'my_clubs');
+    }
+
+    public function getUsers()
+    {
+        return $this->get('insert', 'users');
+    }
+
+    public function getPersonalAccessTokens()
+    {
+        return $this->get('insert', 'personal_access_tokens');
+    }
+
     private function saveSeason()
     {
         $season = $this->excludeDateTime(Season::get());
@@ -133,6 +148,24 @@ final class InsertJsonRepository extends JsonRepository
         $content = $playerStatistics->toJson();
 
         $this->save('insert', 'player_statistics', $content);
+    }
+
+    private function saveMyClubs()
+    {
+        $myClubs = $this->excludeDateTime($this->getMyClubs());
+
+        $content = $myClubs->toJson();
+
+        $this->save('insert', 'my_clubs', $content);
+    }
+
+    private function saveUsers()
+    {
+        $users = $this->excludeDateTime($this->getUsers());
+
+        $content = $users->toJson();
+
+        $this->save('insert', 'users', $content);
     }
 
     private function excludeDateTime(Collection $collection)

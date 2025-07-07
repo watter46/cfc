@@ -37,15 +37,11 @@ export async function initializeApp(): Promise<void> {
   const { initializeCsrfToken } = await import("./config/http-client");
 
   try {
-    console.log("🚀 Initializing application...");
-
     // 環境設定の検証
     validateEnvironment();
 
     // CSRFトークンの初期化
     await initializeCsrfToken();
-
-    console.log("✅ Application initialized successfully");
   } catch (error) {
     console.error("❌ Application initialization failed:", error);
     throw error;

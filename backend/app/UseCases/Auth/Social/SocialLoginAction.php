@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\SocialProviderType;
 use App\Models\User;
 use App\Traits\Loggable;
 use App\UseCases\Auth\Social\Services\SocialUserService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User as ContractsUser;
 
@@ -15,7 +16,7 @@ use Laravel\Socialite\Contracts\User as ContractsUser;
  * ソーシャルログイン処理のユースケースクラス
  * 
  * ソーシャルログインでのユーザー検索・作成・更新処理を担当します。
- * ビジネスロジックはServiceに委譲し、データの調整・連携を行います。
+ * セッションベースの認証でログイン状態を管理します。
  */
 final readonly class SocialLoginAction
 {
@@ -30,7 +31,7 @@ final readonly class SocialLoginAction
      * 
      * @param ContractsUser $socialiteUser Socialiteから取得したユーザー情報
      * @param SocialProviderType $provider プロバイダータイプ（google|x）
-     * @return array{user: User, token: string, is_new_user: bool} 処理結果
+     * @return array{user: User, is_new_user: bool} 処理結果
      */
     public function execute(ContractsUser $socialiteUser, SocialProviderType $provider): array
     {
@@ -53,8 +54,8 @@ final readonly class SocialLoginAction
             $isNewUser = $user->wasRecentlyCreated;
         }
 
-        // 4. Sanctumトークンの生成
-        $token = $user->createToken('social-auth-token')->plainTextToken;
+        // 4. セッションベースのログイン
+        Auth::login($user);
 
         $this->logComplete([
             'user_id' => $user->id,
@@ -64,7 +65,6 @@ final readonly class SocialLoginAction
 
         return [
             'user' => $user,
-            'token' => $token,
             'is_new_user' => $isNewUser
         ];
     }

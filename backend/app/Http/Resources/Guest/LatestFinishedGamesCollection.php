@@ -16,18 +16,20 @@ final class LatestFinishedGamesCollection extends ApiResourceCollection
      */
     public function toArray($request): array
     {
-        return [
-            'data' => $this->collection
-                ->map(function (Game $game) {
-                    return [
-                        'date'         => $game->formatted_started_at,
-                        'score'        => $game->score,
-                        'home'         => $game->homeTeam,
-                        'away'         => $game->awayTeam,
-                        'WinnerTeamId' => $game->winner_team_id,
-                        'isRateable'   => $game->isRateable,
-                    ];
-                }),
-        ];
+        $response = parent::toArray($request);
+
+        $response['data'] = $this->collection
+            ->map(function (Game $game) {
+                return [
+                    'date'         => $game->formatted_started_at,
+                    'score'        => $game->score,
+                    'home'         => $game->homeTeam,
+                    'away'         => $game->awayTeam,
+                    'WinnerTeamId' => $game->winner_team_id,
+                    'isRateable'   => $game->isRateable,
+                ];
+            });
+
+        return $response;
     }
 }

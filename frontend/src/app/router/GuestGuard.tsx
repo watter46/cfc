@@ -34,7 +34,6 @@ export function GuestGuard({
 
   // ログイン済みユーザーは/matchesにリダイレクト
   if (isAuthenticated) {
-    console.log("🔄 ログイン済みユーザーを /matches にリダイレクトします");
     return <Navigate to="/matches" replace />;
   }
 
