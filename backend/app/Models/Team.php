@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Team extends Model
@@ -58,5 +59,26 @@ final class Team extends Model
     public function awayGames(): HasMany
     {
         return $this->hasMany(Game::class, 'away_team_id');
+    }
+
+    /**
+     * このチームをお気に入り登録しているマイクラブ
+     */
+    public function myClubs(): HasMany
+    {
+        return $this->hasMany(MyClub::class);
+    }
+
+    /**
+     * チームが所属するリーグを取得
+     */
+    public function leagues(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            League::class,
+            'games', // 中間テーブルとしてGameを使用
+            'home_team_id', // TeamのIDが格納されるカラム
+            'league_id', // LeagueのIDが格納されるカラム
+        )->distinct(); // 重複を排除
     }
 }

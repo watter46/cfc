@@ -19,8 +19,12 @@ final class SeasonBuilder extends Builder
     /**
      * 特定の年のシーズンを取得
      */
-    public function byYear(int $year): self
+    public function byYear(?int $year): self
     {
-        return $this->where('year_start', $year);
+        if ($year === null) {
+            return $this->current();
+        }
+
+        return $this->where('year', $year);
     }
 }

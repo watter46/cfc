@@ -60,12 +60,9 @@ final class User extends Authenticatable
         ];
     }
 
-    /**
-     * ユーザーの評価を取得
-     */
-    public function ratings(): HasMany
+    public function myClubs(): HasMany
     {
-        return $this->hasMany(Rating::class);
+        return $this->hasMany(MyClub::class);
     }
 
     /**
