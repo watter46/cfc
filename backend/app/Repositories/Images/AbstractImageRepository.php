@@ -40,7 +40,7 @@ abstract class AbstractImageRepository
     {
         $this->setFileName($fileName);
 
-        return config('app.url') . '/' . $this->storagePath();
+        return config('app.url').'/'.$this->storagePath();
     }
 
     public function files()

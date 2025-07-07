@@ -100,4 +100,24 @@ trait Loggable
 
         Log::debug("🐛 [DEBUG] {$message}", array_merge($debugInfo, $context));
     }
+
+    /**
+     * デバッグ用データのフォーマット
+     */
+    protected function formatDebugData($data)
+    {
+        // 配列やオブジェクトはprint_rで整形して改行付きで返す
+        if (is_array($data) || is_object($data)) {
+            return print_r($data, true);
+        }
+        return $data;
+    }
+
+    /**
+     * データ型の取得
+     */
+    protected function getDataType($data)
+    {
+        return gettype($data);
+    }
 }
