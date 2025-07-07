@@ -107,6 +107,26 @@ export interface SocialLoginResponse {
 }
 
 /**
+ * 試合一覧のセレクタ（フィルタリング用）の型定義
+ */
+export interface MatchSelectors {
+  seasons: {
+    id: number;
+    year: string; // year表記に変更
+  }[];
+  my_clubs: {
+    id: number;
+    name: string;
+    logo_path: string;
+  }[];
+  leagues: {
+    id: number;
+    name: string;
+    logo_path: string;
+  }[];
+}
+
+/**
  * APIルート（/api付き）用のURLを組み立てる
  * @param endpoint エンドポイントのパス（例: "/matches"）
  * @returns ベースURL + /api + endpoint

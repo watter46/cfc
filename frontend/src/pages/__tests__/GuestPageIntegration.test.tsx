@@ -138,44 +138,6 @@ describe("Guest Page Integration Tests", () => {
     });
   });
 
-  describe("Backend Data Flow", () => {
-    it("imports and uses mockMatchesData from mockData", async () => {
-      // このテストは、実際のmockMatchesDataインポートが動作することを確認
-      const MockDataModule = await import(
-        "../../features/matches/data/mockData.ts"
-      );
-      const { mockMatchesData } = MockDataModule;
-
-      expect(mockMatchesData).toBeDefined();
-      expect(Array.isArray(mockMatchesData)).toBe(true);
-      expect(mockMatchesData.length).toBeGreaterThan(0);
-    });
-
-    it("mockMatchesData contains valid backend structure", async () => {
-      const MockDataModule = await import(
-        "../../features/matches/data/mockData.ts"
-      );
-      const { mockMatchesData } = MockDataModule;
-
-      mockMatchesData.forEach((match: unknown) => {
-        const typedMatch = match as {
-          id: string;
-          home: { id: number; name: string };
-          away: { id: number; name: string };
-          isRateable: boolean;
-        };
-        // バックエンドデータの構造確認
-        expect(typedMatch.home).toBeDefined();
-        expect(typedMatch.away).toBeDefined();
-        expect(typedMatch.home.id).toBeDefined();
-        expect(typedMatch.away.id).toBeDefined();
-        expect(typedMatch.home.name).toBeDefined();
-        expect(typedMatch.away.name).toBeDefined();
-        expect(typeof typedMatch.isRateable).toBe("boolean");
-      });
-    });
-  });
-
   describe("Component Data Binding", () => {
     it("renders without crashing with real backend data", () => {
       // 実際のバックエンドデータでコンポーネントがクラッシュしないことを確認

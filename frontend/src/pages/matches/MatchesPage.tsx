@@ -1,150 +1,107 @@
-import { useMatches } from "@/features/matches/hooks/useMatches";
-import type { Match } from "@/features/matches/types/api";
+import {
+  MatchCard,
+  MatchesFilter,
+  MatchesPagination,
+  MatchesLoadingSkeleton,
+  MatchesError,
+} from "@/features/matches/components/user";
+import { useMatchesQuery } from "@/features/matches/hooks/user";
+import MainLayout from "@/shared/components/layout/MainLayout.tsx";
 
 /**
  * 試合ページ
  * 認証済みユーザー向けの試合一覧を表示
+ * サイバーパンク・未来感のあるデザインで一貫した体験を提供
  */
 export function MatchesPage() {
-  const { data, isLoading, error } = useMatches();
+  const { data, isLoading, error, refetch } = useMatchesQuery();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-7xl mx-auto">
-        {/* ページヘッダー */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">試合管理</h1>
-          <p className="text-gray-600">
-            参加可能な試合を確認し、新しい試合を作成することができます。
-          </p>
-        </div>
+    <MainLayout>
+      <div className="min-h-screen bg-gradient-to-br from-space-900 via-black to-space-900">
+        {/* 背景パターン */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.1),transparent_50%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(147,51,234,0.1),transparent_50%)] pointer-events-none" />
 
-        {/* 認証ステータス確認 */}
-        <div className="mb-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <svg
-                className="h-5 w-5 text-green-400 mr-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-green-800 font-medium">
-                ✅ 認証済み - 試合データを取得中
-              </span>
-            </div>
-            <p className="text-green-700 text-sm mt-1">
-              認証トークン:{" "}
-              {localStorage.getItem("auth_token") ? "設定済み" : "未設定"}
-            </p>
-          </div>
-        </div>
-
-        {/* データ取得状態表示 */}
-        <div className="mb-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h2 className="text-lg font-semibold text-blue-900 mb-2">
-              試合データ取得状況
-            </h2>
-            {isLoading && (
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-blue-600">データを読み込み中...</span>
-              </div>
-            )}
-            {error && (
-              <div className="text-red-600">
-                エラー:{" "}
-                {error instanceof Error
-                  ? error.message
-                  : "不明なエラーが発生しました"}
-              </div>
-            )}
-            {data && (
-              <div className="text-green-600 font-medium">
-                📡 取得完了: {data.total}件の試合 (ページ {data.page})
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 試合一覧 */}
-        {data && data.matches && data.matches.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {data.matches.map((match: Match) => (
-              <div
-                key={match.id}
-                className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {match.title}
-                  </h3>
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      match.status === "upcoming"
-                        ? "bg-blue-100 text-blue-800"
-                        : match.status === "ongoing"
-                        ? "bg-green-100 text-green-800"
-                        : match.status === "completed"
-                        ? "bg-gray-100 text-gray-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {match.status === "upcoming"
-                      ? "開催予定"
-                      : match.status === "ongoing"
-                      ? "開催中"
-                      : match.status === "completed"
-                      ? "終了"
-                      : "キャンセル"}
-                  </span>
+        <div className="relative container mx-auto px-4 py-8">
+          <div className="max-w-7xl mx-auto">
+            {/* ページヘッダー */}
+            <div className="mb-8">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-2 h-12 bg-gradient-to-b from-neon-blue to-neon-purple rounded-full" />
+                <div>
+                  <h1 className="text-4xl font-bold text-white mb-2">
+                    試合一覧
+                  </h1>
+                  <p className="text-space-300 text-lg">
+                    あなたの試合データを確認し、パフォーマンスを追跡しましょう
+                  </p>
                 </div>
-                
-                {match.description && (
-                  <p className="text-gray-600 text-sm mb-4">{match.description}</p>
-                )}
-                
-                <div className="space-y-2 text-sm text-gray-500">
-                  <div className="flex justify-between">
-                    <span>開始時間:</span>
-                    <span>{new Date(match.startTime).toLocaleString('ja-JP')}</span>
+              </div>
+            </div>
+
+            {/* フィルター */}
+            <div className="mb-8">
+              <MatchesFilter />
+            </div>
+
+            {/* メインコンテンツ */}
+            <div className="space-y-6">
+              {/* ローディング状態 */}
+              {isLoading && <MatchesLoadingSkeleton />}
+
+              {/* エラー状態 */}
+              {error && <MatchesError error={error} onRetry={refetch} />}
+
+              {/* 試合一覧 */}
+              {data && !isLoading && !error && (
+                <>
+                  {/* 検索結果情報 */}
+                  <div className="flex items-center justify-between text-space-300 text-sm">
+                    <div>
+                      {data.meta.pagination.count}件の試合が見つかりました
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>参加者:</span>
-                    <span>{match.currentPlayers}/{match.maxPlayers}</span>
-                  </div>
-                  {match.creator && (
-                    <div className="flex justify-between">
-                      <span>作成者:</span>
-                      <span>{match.creator.name}</span>
+
+                  {/* 試合カード一覧 */}
+                  {data.data.length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {data.data.map((match) => (
+                        <MatchCard key={match.id} match={match} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-4 text-space-500">
+                        <svg fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="text-space-400 text-lg font-medium mb-2">
+                        試合が見つかりませんでした
+                      </h3>
+                      <p className="text-space-500">
+                        フィルター条件を変更して再度お試しください
+                      </p>
                     </div>
                   )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : data && !isLoading ? (
-          <div className="text-center py-12">
-            <div className="text-gray-500 text-lg">参加可能な試合がありません</div>
-            <p className="text-gray-400 mt-2">新しい試合を作成してみましょう</p>
-          </div>
-        ) : null}
 
-        {/* ページネーション情報 */}
-        {data && (
-          <div className="mt-8 text-center text-gray-500 text-sm">
-            {data.hasPrevPage && <span>前のページ</span>}
-            {data.hasPrevPage && data.hasNextPage && <span> | </span>}
-            {data.hasNextPage && <span>次のページ</span>}
+                  {/* ページネーション */}
+                  {data.data.length > 0 && (
+                    <div className="mt-8">
+                      <MatchesPagination meta={data.meta} />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }
