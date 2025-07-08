@@ -31,10 +31,23 @@ final readonly class SigninAction
     public function execute(array $data): UserResource
     {
         $this->logStart(['email' => $data['email']]);
+        
+        // デバッグログ: リクエストデータの確認
+        $this->logDebug('サインインリクエストデータを受信', [
+            'email' => $data['email'],
+            'has_password' => !empty($data['password']),
+        ]);
 
         try {
             // ユーザーの存在確認
             $user = User::where('email', $data['email'])->first();
+            
+            // デバッグログ: ユーザー検索結果
+            $this->logDebug('ユーザー検索完了', [
+                'email' => $data['email'],
+                'user_found' => $user !== null,
+                'user_id' => $user?->ulid,
+            ]);
 
             if (!$user || !Hash::check($data['password'], $user->password)) {
                 throw new AuthenticationException('認証に失敗しました。');
@@ -42,6 +55,12 @@ final readonly class SigninAction
 
             // セッションベースのログイン
             Auth::login($user);
+            
+            // デバッグログ: 認証完了
+            $this->logDebug('認証処理完了', [
+                'user_id' => $user->ulid,
+                'auth_id' => Auth::id(),
+            ]);
 
             $this->logComplete(['user_id' => $user->ulid]);
 
