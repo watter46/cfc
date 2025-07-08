@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
-use App\Http\Controllers\Auth\SocialProviderType;
 use App\Models\User;
+use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 /**
  * ソーシャルログイン機能のFeature Test
- * 
+ *
  * API エンドポイントの統合テストを実装し、
  * 実際のHTTPリクエスト・レスポンスの動作を検証します。
  */
@@ -37,7 +37,7 @@ class SocialLoginTest extends TestCase
      * @test
      * Googleログインのリダイレクトが正常に動作することを確認
      */
-    public function ソーシャルログイン_Googleリダイレクト_正常動作(): void
+    public function ソーシャルログイン_googleリダイレクト_正常動作(): void
     {
         // Socialiteのモック作成
         $mockDriver = Mockery::mock();
@@ -61,7 +61,7 @@ class SocialLoginTest extends TestCase
      * @test
      * Xログインのリダイレクトが正常に動作することを確認
      */
-    public function ソーシャルログイン_Xリダイレクト_正常動作(): void
+    public function ソーシャルログイン_xリダイレクト_正常動作(): void
     {
         // Socialiteのモック作成
         $mockDriver = Mockery::mock();
@@ -85,13 +85,13 @@ class SocialLoginTest extends TestCase
      * @test
      * 新規ユーザーのGoogleログインコールバックが正常に動作することを確認
      */
-    public function ソーシャルログイン_Google新規ユーザー_正常作成(): void
+    public function ソーシャルログイン_google新規ユーザー_正常作成(): void
     {
         // Socialiteユーザーのモック作成
         $socialiteUser = $this->createMockSocialiteUser([
-            'id' => 'google123',
-            'name' => 'テストユーザー',
-            'email' => 'test@example.com'
+            'id'    => 'google123',
+            'name'  => 'テストユーザー',
+            'email' => 'test@example.com',
         ]);
 
         $this->mockSocialiteCallback('google', $socialiteUser);
@@ -106,24 +106,24 @@ class SocialLoginTest extends TestCase
                 'user' => [
                     'ulid',
                     'name',
-                    'email'
+                    'email',
                 ],
-                'token'
+                'token',
             ])
             ->assertJson([
                 'message' => 'ソーシャルログインが成功しました',
-                'user' => [
-                    'name' => 'テストユーザー',
-                    'email' => 'test@example.com'
-                ]
+                'user'    => [
+                    'name'  => 'テストユーザー',
+                    'email' => 'test@example.com',
+                ],
             ]);
 
         // データベース検証
         $this->assertDatabaseHas('users', [
-            'name' => 'テストユーザー',
-            'email' => 'test@example.com',
-            'provider' => 'google',
-            'provider_id' => 'google123'
+            'name'        => 'テストユーザー',
+            'email'       => 'test@example.com',
+            'provider'    => 'google',
+            'provider_id' => 'google123',
         ]);
     }
 
@@ -135,17 +135,17 @@ class SocialLoginTest extends TestCase
     {
         // 既存ユーザーを作成
         $existingUser = User::factory()->create([
-            'name' => '既存ユーザー',
-            'email' => 'existing@example.com',
-            'provider' => 'google',
-            'provider_id' => 'google456'
+            'name'        => '既存ユーザー',
+            'email'       => 'existing@example.com',
+            'provider'    => 'google',
+            'provider_id' => 'google456',
         ]);
 
         // Socialiteユーザーのモック作成
         $socialiteUser = $this->createMockSocialiteUser([
-            'id' => 'google456',
-            'name' => '更新された名前',
-            'email' => 'existing@example.com'
+            'id'    => 'google456',
+            'name'  => '更新された名前',
+            'email' => 'existing@example.com',
         ]);
 
         $this->mockSocialiteCallback('google', $socialiteUser);
@@ -157,10 +157,10 @@ class SocialLoginTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'ソーシャルログインが成功しました',
-                'user' => [
-                    'name' => '更新された名前',
-                    'email' => 'existing@example.com'
-                ]
+                'user'    => [
+                    'name'  => '更新された名前',
+                    'email' => 'existing@example.com',
+                ],
             ]);
 
         // ユーザー情報が更新されていることを確認
@@ -176,16 +176,16 @@ class SocialLoginTest extends TestCase
     {
         // 通常登録の既存ユーザーを作成（ソーシャル情報なし）
         $existingUser = User::factory()->create([
-            'email' => 'same@example.com',
-            'provider' => null,
-            'provider_id' => null
+            'email'       => 'same@example.com',
+            'provider'    => null,
+            'provider_id' => null,
         ]);
 
         // Socialiteユーザーのモック作成
         $socialiteUser = $this->createMockSocialiteUser([
-            'id' => 'google789',
-            'name' => 'ソーシャルユーザー',
-            'email' => 'same@example.com'
+            'id'    => 'google789',
+            'name'  => 'ソーシャルユーザー',
+            'email' => 'same@example.com',
         ]);
 
         $this->mockSocialiteCallback('google', $socialiteUser);
@@ -219,13 +219,13 @@ class SocialLoginTest extends TestCase
      * @test
      * Socialiteでエラーが発生した場合の処理を確認
      */
-    public function ソーシャルログイン_Socialite例外_エラーハンドリング(): void
+    public function ソーシャルログイン_socialite例外_エラーハンドリング(): void
     {
         // Socialiteのモック作成（例外を投げる）
         $mockDriver = Mockery::mock();
         $mockDriver->shouldReceive('user')
             ->once()
-            ->andThrow(new \Exception('OAuth認証に失敗しました'));
+            ->andThrow(new Exception('OAuth認証に失敗しました'));
 
         Socialite::shouldReceive('driver')
             ->with('google')
@@ -239,7 +239,7 @@ class SocialLoginTest extends TestCase
         $response->assertStatus(400)
             ->assertJson([
                 'message' => 'ソーシャルログインに失敗しました',
-                'error' => 'ログインがキャンセルされたか、認証に失敗しました'
+                'error'   => 'ログインがキャンセルされたか、認証に失敗しました',
             ]);
     }
 

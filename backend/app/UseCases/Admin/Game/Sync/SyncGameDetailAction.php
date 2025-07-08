@@ -9,6 +9,7 @@ use App\Models\Game;
 use App\Models\GamePlayer;
 use App\Models\Player;
 use App\Models\PlayerStatistic;
+use App\Traits\Loggable;
 use App\UseCases\Admin\Game\ApiFootballRepositoryInterface;
 use App\UseCases\Admin\Game\Sync\Service\GameDataFilterService;
 use App\UseCases\Admin\Game\Sync\Service\ImageSyncDataService;
@@ -23,6 +24,7 @@ use RuntimeException;
 
 final readonly class SyncGameDetailAction
 {
+    use Loggable;
     public function __construct(
         private ApiFootballRepositoryInterface $repository,
         private GameTransformer $gameTransformer,

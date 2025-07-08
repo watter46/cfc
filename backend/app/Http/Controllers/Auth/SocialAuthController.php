@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
-use App\Exceptions\Auth\SocialLoginException;
+use App\Exceptions\BusinessLogicException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\SocialLoginRequest;
 use App\Http\Resources\Auth\UserResource;
@@ -65,7 +65,7 @@ final class SocialAuthController extends Controller
             $socialiteUser = Socialite::driver($provider->value)->user();
 
             if (!$socialiteUser || !$socialiteUser->id) {
-                throw SocialLoginException::userInfoRetrievalFailed($provider->value);
+                throw new BusinessLogicException("プロバイダー「{$provider->value}」からのユーザー情報取得に失敗しました。");
             }
 
             $result = $this->socialLoginAction->execute($socialiteUser, $provider);
@@ -80,9 +80,9 @@ final class SocialAuthController extends Controller
             
             return redirect($redirectUrl);
 
-        } catch (SocialLoginException $e) {
+        } catch (BusinessLogicException $e) {
             $this->logError($e, ['provider' => $provider->value]);
-            $error = urlencode($e->getMessage());
+            $error = urlencode($e->getUserMessage());
             return redirect("$frontendBaseUrl/auth/callback?error={$error}");
         } catch (Exception $e) {
             $this->logError($e, ['provider' => $provider->value]);

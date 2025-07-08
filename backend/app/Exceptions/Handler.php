@@ -4,29 +4,25 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
-use App\Exceptions\Api\ApiException;
+use App\Traits\Loggable;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
+/**
+ * アプリケーション例外ハンドラー
+ *
+ * カスタム例外クラスに対応し、ユーザー向けレスポンスと開発者向けログを適切に処理します。
+ */
 final class Handler extends ExceptionHandler
 {
-    /**
-     * A list of exception types with their corresponding custom log levels.
-     *
-     * @var array<class-string<Throwable>, \Psr\Log\LogLevel::*>
-     */
-    protected $levels = [
-        //
-    ];
+    use Loggable;
 
     /**
-     * A list of the exception types that are not reported.
+     * 報告しない例外タイプ
      *
      * @var array<int, class-string<Throwable>>
      */
@@ -35,7 +31,7 @@ final class Handler extends ExceptionHandler
     ];
 
     /**
-     * A list of the inputs that are never flashed to the session on validation exceptions.
+     * セッションにフラッシュしない入力項目
      *
      * @var array<int, string>
      */
@@ -46,7 +42,7 @@ final class Handler extends ExceptionHandler
     ];
 
     /**
-     * Register the exception handling callbacks for the application.
+     * 例外処理コールバックの登録
      */
     public function register(): void
     {
@@ -56,51 +52,11 @@ final class Handler extends ExceptionHandler
     }
 
     /**
-     * APIリクエストに対する例外レンダリング
-     */
-    protected function renderApiException(Request $request, Throwable $e): JsonResponse
-    {
-        // カスタムAPI例外の場合はそのままレンダリング
-        if ($e instanceof ApiException) {
-            return $e->render();
-        }
-
-        // バリデーション例外の場合
-        if ($e instanceof ValidationException) {
-            return (new Api\ValidationException($e))->render();
-        }
-
-        // 認証エラーの場合
-        if ($e instanceof AuthenticationException) {
-            return (new Api\UnauthorizedException($e->getMessage()))->render();
-        }
-
-        // HTTPエラーの場合
-        if ($e instanceof HttpException) {
-            $statusCode = $e->getStatusCode();
-            $message = $e->getMessage() ?: 'HTTP Error';
-
-            return (new ApiException($message, $statusCode))->render();
-        }
-
-        // その他のエラー（500 Internal Server Error）
-        $statusCode = 500;
-        $message = config('app.debug') ? $e->getMessage() : 'Server Error';
-
-        return (new ApiException($message, $statusCode))->render();
-    }
-
-    /**
-     * Render an exception into an HTTP response.
-     *
-     * @param  Request  $request
-     * @return \Symfony\Component\HttpFoundation\Response
-     *
-     * @throws Throwable
+     * HTTPレスポンスへの例外レンダリング
      */
     public function render($request, Throwable $e)
     {
-        // APIリクエストの場合は専用のレンダリングを行う
+        // APIリクエストの場合
         if ($request->expectsJson() || $request->is('api/*')) {
             return $this->renderApiException($request, $e);
         }
@@ -108,16 +64,48 @@ final class Handler extends ExceptionHandler
         return parent::render($request, $e);
     }
 
-    protected function unauthenticated($request, AuthenticationException $exception)
+    /**
+     * APIリクエストに対する例外レンダリング
+     */
+    protected function renderApiException(Request $request, Throwable $e): JsonResponse
     {
-        dd('log');
-        // 認証失敗をログに記録
-        Log::warning('認証失敗', [
-            'url' => $request->fullUrl(),
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        // UserFriendlyException（カスタム例外）の場合
+        if ($e instanceof UserFriendlyException) {
+            $this->logUserFriendlyException($e, []);
 
-        return response()->json(['message' => 'Unauthenticated.'], 401);
+            return response()->json([
+                'message' => $e->getUserMessage(),
+                'success' => false,
+            ], $e->getCode());
+        }
+
+        // Laravel標準のバリデーション例外
+        if ($e instanceof ValidationException) {
+            $this->logValidationError($e->errors(), []);
+
+            return response()->json([
+                'message' => trans('validation_error'),
+                'errors'  => $e->errors(),
+                'success' => false,
+            ], 422);
+        }
+
+        // Laravel標準の認証例外
+        if ($e instanceof AuthenticationException) {
+            $this->logAuthenticationError($e->getMessage(), []);
+
+            return response()->json([
+                'message' => trans('authentication_error'),
+                'success' => false,
+            ], 401);
+        }
+
+        // その他のシステムエラー
+        $this->logSystemError($e, []);
+
+        return response()->json([
+            'message' => trans('system_error'),
+            'success' => false,
+        ], 500);
     }
 }
