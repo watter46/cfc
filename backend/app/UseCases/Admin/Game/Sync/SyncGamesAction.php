@@ -9,6 +9,7 @@ use App\Models\Game;
 use App\Models\League;
 use App\Models\Season;
 use App\Models\Team;
+use App\Traits\Loggable;
 use App\UseCases\Admin\Game\ApiFootballRepositoryInterface;
 use App\UseCases\Admin\Game\Sync\Dto\ApiFootball\FixtureListDto;
 use App\UseCases\Admin\Game\Sync\Exceptions\EmptyApiResponseException;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 
 final readonly class SyncGamesAction
 {
+    use Loggable;
     public function __construct(
         private ApiFootballRepositoryInterface $apiFootballRepository,
         private GameTransformer $gameTransformer,

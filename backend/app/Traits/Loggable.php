@@ -6,6 +6,7 @@ namespace App\Traits;
 
 use Exception;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * ログ出力を統一するためのトレイト
@@ -153,5 +154,115 @@ trait Loggable
     protected function getDataType($data): string
     {
         return gettype($data);
+    }
+
+    /**
+     * セキュリティイベントのログを記録
+     *
+     * @param  string  $event  セキュリティイベントの種類
+     * @param  array  $context  イベントに関する詳細情報
+     */
+    protected function logSecurityEvent(string $event, array $context = []): void
+    {
+        $className = class_basename(static::class);
+
+        Log::channel('security')->warning("セキュリティイベント: {$event}", array_merge([
+            'class'      => static::class,
+            'event_type' => $event,
+            'timestamp'  => now()->toISOString(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ], $context));
+    }
+
+    /**
+     * バリデーションエラーのログを記録
+     *
+     * @param  array  $errors  バリデーションエラーの詳細
+     * @param  array  $context  追加のコンテキスト情報
+     */
+    protected function logValidationError(array $errors, array $context = []): void
+    {
+        $className = class_basename(static::class);
+
+        Log::channel('app')->info('バリデーションエラー', array_merge([
+            'class'  => static::class,
+            'errors' => $errors,
+            'url'    => request()->fullUrl(),
+            'method' => request()->method(),
+            'ip'     => request()->ip(),
+            'input'  => request()->except(['password', 'password_confirmation']),
+        ], $context));
+    }
+
+    /**
+     * 認証エラーのログを記録
+     *
+     * @param  string  $message  認証エラーメッセージ
+     * @param  array  $context  追加のコンテキスト情報
+     */
+    protected function logAuthenticationError(string $message, array $context = []): void
+    {
+        Log::channel('security')->warning('認証失敗', array_merge([
+            'message'    => $message,
+            'url'        => request()->fullUrl(),
+            'method'     => request()->method(),
+            'ip'         => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'timestamp'  => now()->toISOString(),
+        ], $context));
+    }
+
+    /**
+     * システムエラーのログを記録
+     *
+     * @param  Throwable  $exception  発生した例外
+     * @param  array  $context  追加のコンテキスト情報
+     */
+    protected function logSystemError(Throwable $exception, array $context = []): void
+    {
+        $className = class_basename(static::class);
+
+        Log::channel('app')->error('システムエラー', array_merge([
+            'class'           => static::class,
+            'exception_class' => get_class($exception),
+            'message'         => $exception->getMessage(),
+            'file'            => $exception->getFile(),
+            'line'            => $exception->getLine(),
+            'trace'           => config('app.debug') ? $exception->getTraceAsString() : 'Hidden in production',
+            'url'             => request()->fullUrl(),
+            'method'          => request()->method(),
+            'ip'              => request()->ip(),
+            'user_agent'      => request()->userAgent(),
+            'timestamp'       => now()->toISOString(),
+        ], $context));
+    }
+
+    /**
+     * UserFriendlyExceptionのログを記録
+     *
+     * @param  \App\Exceptions\UserFriendlyException  $exception  カスタム例外
+     * @param  array  $context  追加のコンテキスト情報
+     */
+    protected function logUserFriendlyException(\App\Exceptions\UserFriendlyException $exception, array $context = []): void
+    {
+        $isSecurityException = $exception instanceof \App\Exceptions\AuthenticationException ||
+                              $exception instanceof \App\Exceptions\AuthorizationException;
+
+        $logContext = array_merge([
+            'exception_class' => get_class($exception),
+            'user_message'    => $exception->getUserMessage(),
+            'url'             => request()->fullUrl(),
+            'method'          => request()->method(),
+            'ip'              => request()->ip(),
+            'user_agent'      => request()->userAgent(),
+            'timestamp'       => now()->toISOString(),
+        ], $context);
+
+        if ($isSecurityException) {
+            Log::channel('security')->warning('セキュリティ例外が発生しました', $logContext);
+        } else {
+            Log::channel('app')->warning('ユーザー向け例外が発生しました', $logContext);
+        }
     }
 }

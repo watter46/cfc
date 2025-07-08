@@ -12,7 +12,7 @@ use Tests\TestCase;
 
 /**
  * SocialLoginAction の単体テスト
- * 
+ *
  * ビジネスロジックの正確性を検証します。
  */
 class SocialLoginActionTest extends TestCase
@@ -27,7 +27,7 @@ class SocialLoginActionTest extends TestCase
      * @test
      * SocialProviderTypeの値が正しく設定されていることを確認
      */
-    public function SocialProviderType_値の確認(): void
+    public function social_provider_type_値の確認(): void
     {
         $this->assertEquals('google', SocialProviderType::Google->value);
         $this->assertEquals('x', SocialProviderType::X->value);
@@ -37,12 +37,12 @@ class SocialLoginActionTest extends TestCase
      * @test
      * Socialiteユーザーのモック作成が正常に動作することを確認
      */
-    public function Socialiteユーザーモック_正常作成(): void
+    public function socialiteユーザーモック_正常作成(): void
     {
         $socialiteUser = $this->createMockSocialiteUser([
-            'id' => 'test123',
-            'name' => 'テストユーザー',
-            'email' => 'test@example.com'
+            'id'    => 'test123',
+            'name'  => 'テストユーザー',
+            'email' => 'test@example.com',
         ]);
 
         $this->assertEquals('test123', $socialiteUser->id);
@@ -54,7 +54,7 @@ class SocialLoginActionTest extends TestCase
      * @test
      * SocialUserServiceのモック作成が正常に動作することを確認
      */
-    public function SocialUserServiceモック_正常作成(): void
+    public function social_user_serviceモック_正常作成(): void
     {
         $mockService = Mockery::mock(SocialUserService::class);
         $this->assertInstanceOf(SocialUserService::class, $mockService);
