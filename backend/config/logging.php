@@ -7,7 +7,6 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Default Log Channel
@@ -52,7 +51,6 @@ return [
     */
 
     'channels' => [
-
         'stack' => [
             'driver'            => 'stack',
             'channels'          => explode(',', env('LOG_STACK', 'single')),
@@ -74,26 +72,10 @@ return [
             'replace_placeholders' => true,
         ],
 
-        'api' => [
-            'driver'               => 'daily',
-            'path'                 => storage_path('logs/api.log'),
-            'level'                => env('LOG_LEVEL', 'debug'),
-            'days'                 => env('LOG_DAILY_DAYS', 14),
-            'replace_placeholders' => true,
-        ],
-
         'api_error' => [
             'driver'               => 'daily',
             'path'                 => storage_path('logs/api_error.log'),
             'level'                => 'error',
-            'days'                 => env('LOG_DAILY_DAYS', 14),
-            'replace_placeholders' => true,
-        ],
-
-        'api_request' => [
-            'driver'               => 'daily',
-            'path'                 => storage_path('logs/api_request.log'),
-            'level'                => 'info',
             'days'                 => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
         ],
@@ -137,8 +119,34 @@ return [
             'level'                => 'warning',
             'days'                 => env('LOG_SECURITY_DAYS', 30),
             'replace_placeholders' => true,
+            'tap'                  => [App\Logging\CustomJsonFormatter::class],
         ],
 
-    ],
+        'app' => [
+            'driver'               => 'daily',
+            'path'                 => storage_path('logs/app.log'),
+            'level'                => env('LOG_LEVEL', 'info'),
+            'days'                 => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+            'tap'                  => [App\Logging\CustomJsonFormatter::class],
+        ],
 
+        'access' => [
+            'driver'               => 'daily',
+            'path'                 => storage_path('logs/access.log'),
+            'level'                => 'info',
+            'days'                 => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+            'tap'                  => [App\Logging\CustomJsonFormatter::class],
+        ],
+
+        'debug' => [
+            'driver'               => 'daily',
+            'path'                 => storage_path('logs/debug.log'),
+            'level'                => 'debug',
+            'days'                 => env('LOG_DEBUG_DAYS', 7),
+            'replace_placeholders' => true,
+            'tap'                  => [App\Logging\CustomJsonFormatter::class],
+        ],
+    ],
 ];

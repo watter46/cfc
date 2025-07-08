@@ -8,73 +8,97 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 
 /**
- * ログ機能を提供するTrait
+ * ログ出力を統一するためのトレイト
  *
- * 最低限のログ出力機能を統一的に提供します。
- * 各クラスで簡潔にログ処理を実装できるようになります。
+ * このトレイトを使用することで、全てのUseCaseクラスで統一されたログ処理を実現します。
+ * 処理開始、完了、警告、エラーのログを適切な形式で出力し、運用監視を容易にします。
  */
 trait Loggable
 {
     /**
-     * 処理開始ログ
+     * 処理開始ログを出力
      *
-     * @param  array  $context  ログに含める追加情報
+     * @param  array  $context  処理に関するコンテキスト情報
      */
     protected function logStart(array $context = []): void
     {
         $className = class_basename(static::class);
 
-        Log::info("{$className}を開始", array_merge([
-            'class' => $className,
+        Log::channel('app')->info("{$className}の処理を開始しました", array_merge([
+            'class'  => static::class,
+            'action' => 'start',
         ], $context));
     }
 
     /**
-     * 処理完了ログ
+     * 処理完了ログを出力（統計情報付き）
      *
-     * @param  array  $context  ログに含める追加情報
+     * @param  array  $stats  処理結果の統計情報（成功件数、失敗件数など）
      */
-    protected function logComplete(array $context = []): void
+    protected function logComplete(array $stats = []): void
     {
         $className = class_basename(static::class);
 
-        Log::info("{$className}が完了", array_merge([
-            'class' => $className,
-        ], $context));
+        Log::channel('app')->info("{$className}の処理が完了しました", array_merge([
+            'class'  => static::class,
+            'action' => 'complete',
+        ], $stats));
     }
 
     /**
-     * 警告ログ
+     * 警告ログを出力（処理は継続するが注意が必要な場合）
      *
      * @param  string  $message  警告メッセージ
-     * @param  array  $context  ログに含める追加情報
+     * @param  array  $context  追加のコンテキスト情報
      */
     protected function logWarning(string $message, array $context = []): void
     {
-        Log::warning($message, array_merge([
-            'class' => class_basename(static::class),
+        $className = class_basename(static::class);
+
+        Log::channel('app')->warning("[{$className}] {$message}", array_merge([
+            'class'  => static::class,
+            'action' => 'warning',
         ], $context));
     }
 
     /**
-     * エラーログ
+     * エラーログを出力（例外発生時）
      *
      * @param  Exception  $exception  発生した例外
-     * @param  array  $context  ログに含める追加情報
+     * @param  array  $context  追加のコンテキスト情報
      */
     protected function logError(Exception $exception, array $context = []): void
     {
-        Log::error($exception->getMessage(), array_merge([
-            'class' => class_basename(static::class),
-            'error' => $exception->getMessage(),
+        $className = class_basename(static::class);
+
+        Log::channel('app')->error("[{$className}] エラーが発生しました: {$exception->getMessage()}", array_merge([
+            'class'           => static::class,
+            'action'          => 'error',
+            'exception_class' => get_class($exception),
+            'file'            => $exception->getFile(),
+            'line'            => $exception->getLine(),
+            'trace'           => $exception->getTraceAsString(),
         ], $context));
     }
 
     /**
-     * デバッグログ（開発環境でのみ出力）
+     * 情報ログを出力（一般的な情報記録）
      *
-     * 変数の中身を詳細に出力し、開発時のデバッグを支援します。
-     * 本番環境では出力されません。
+     * @param  string  $message  ログメッセージ
+     * @param  array  $context  追加のコンテキスト情報
+     */
+    protected function logInfo(string $message, array $context = []): void
+    {
+        $className = class_basename(static::class);
+
+        Log::channel('app')->info("[{$className}] {$message}", array_merge([
+            'class'  => static::class,
+            'action' => 'info',
+        ], $context));
+    }
+
+    /**
+     * デバッグログを出力（開発時の詳細情報）
      *
      * @param  string  $message  デバッグメッセージ
      * @param  mixed  $data  デバッグ対象のデータ
@@ -87,8 +111,11 @@ trait Loggable
             return;
         }
 
+        $className = class_basename(static::class);
+
         $debugInfo = [
-            'class'   => class_basename(static::class),
+            'class'   => static::class,
+            'action'  => 'debug',
             'message' => $message,
         ];
 
@@ -98,11 +125,14 @@ trait Loggable
             $debugInfo['data_type'] = $this->getDataType($data);
         }
 
-        Log::debug("🐛 [DEBUG] {$message}", array_merge($debugInfo, $context));
+        Log::channel('debug')->debug("[{$className}] {$message}", array_merge($debugInfo, $context));
     }
 
     /**
      * デバッグ用データのフォーマット
+     *
+     * @param  mixed  $data  フォーマット対象のデータ
+     * @return mixed フォーマット済みのデータ
      */
     protected function formatDebugData($data)
     {
@@ -110,13 +140,17 @@ trait Loggable
         if (is_array($data) || is_object($data)) {
             return print_r($data, true);
         }
+
         return $data;
     }
 
     /**
      * データ型の取得
+     *
+     * @param  mixed  $data  型を取得する対象のデータ
+     * @return string データ型
      */
-    protected function getDataType($data)
+    protected function getDataType($data): string
     {
         return gettype($data);
     }

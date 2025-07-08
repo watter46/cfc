@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http;
 
-use App\Http\Middleware\ApiLogger;
+use App\Http\Middleware\AccessLogMiddleware;
+use App\Http\Middleware;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 final class Kernel extends HttpKernel
@@ -44,7 +45,7 @@ final class Kernel extends HttpKernel
         'api' => [
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            ApiLogger::class, // APIリクエスト/レスポンスのログ記録
+            AccessLogMiddleware::class, // アクセスログの記録
         ],
     ];
 

@@ -37,6 +37,9 @@ final readonly class FetchGamesAction
     public function execute(array $inputData): Paginator
     {
         $this->logStart($inputData);
+        
+        // デバッグログ: 入力データの詳細
+        $this->logDebug('ゲーム一覧取得の入力データを解析', $inputData);
 
         try {
             $resolved = $this->resolver->resolve($inputData);
@@ -45,6 +48,13 @@ final readonly class FetchGamesAction
                 'teamId'   => $resolvedTeamId,
                 'leagueId' => $resolvedLeagueId,
             ] = $resolved;
+            
+            // デバッグログ: 解決されたフィルター条件
+            $this->logDebug('フィルター条件解決完了', [
+                'resolved_season_id' => $resolvedSeasonId,
+                'resolved_team_id' => $resolvedTeamId,
+                'resolved_league_id' => $resolvedLeagueId,
+            ]);
 
             $games = Game::query()
                 ->with([
@@ -72,14 +82,26 @@ final readonly class FetchGamesAction
                 ->isDetailsFetched()
                 ->orderByDesc('started_at')
                 ->simplePaginate(self::LATEST_GAMES_LIMIT, ['*'], 'page', $inputData['page'] ?? 1);
+                
+            // デバッグログ: クエリ実行結果
+            $this->logDebug('ゲームクエリ実行完了', [
+                'total_count' => $games->count(),
+                'current_page' => $games->currentPage(),
+                'per_page' => $games->perPage(),
+            ]);
 
             $mapped = $games
                 ->getCollection()
                 ->map(function (Game $game) {
                     $game->rateable = $this->rateable->check($game);
-
                     return $game;
                 });
+                
+            // デバッグログ: 評価可能チェック完了
+            $this->logDebug('評価可能性チェック完了', [
+                'processed_games' => $mapped->count(),
+                'rateable_games' => $mapped->where('rateable', true)->count(),
+            ]);
 
             $this->logComplete(['message' => 'ゲーム一覧取得処理が完了しました']);
 
